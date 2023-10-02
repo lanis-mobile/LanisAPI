@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "lanisapi"
-version = "0.0.1a"
+version = "0.0.2a"
 authors = [
     { name = "kurwjan" }
 ]
