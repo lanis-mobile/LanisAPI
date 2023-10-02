@@ -3,7 +3,7 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "LanisAPI"
+name = "lanisapi"
 version = "0.0.1"
 authors = [
     { name = "kurwjan" }
@@ -28,3 +28,7 @@ dependencies = [
     "httpx",
     "selectolax",
 ]
+
+[project.urls]
+"Homepage" = "https://github.com/kurwjan/LanisAPI"
+"Bug Tracker" = "https://github.com/kurwjan/LanisAPI/issues"
