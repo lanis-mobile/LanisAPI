@@ -6,7 +6,7 @@
 > **Because the Schulportal Hessen changes quickly and is very fragmented, *(like the backwards compability with Linux libraries)* can some functions at specifc schools or after a time not be working anymore.**
 
 ## What is this?
-It's a unofficial Python library for the Schulportal Hessen. Also available on [PyPi](https://pypi.org/project/lanisapi/).
+It's an unofficial Python library for the Schulportal Hessen. Also available on [PyPi](https://pypi.org/project/lanisapi/).
 
 ## How do I install it?
 ```
@@ -38,7 +38,7 @@ More infos at the wiki.
 3. **Extra nice**: You can contribute to this project. If you're new to contributing, look [here](https://docs.github.com/en/get-started/quickstart/contributing-to-projects).
 
 ## Credits
-The Javascript project [SPHclient](https://github.com/alessioC42/SPHclient) from [@alessioC42](https://github.com/alessioC42) helped me to understand the Shitpile *Schulportal Hessen*.
+The Javascript project [SPHclient](https://github.com/alessioC42/SPHclient) from [@alessioC42](https://github.com/alessioC42) helped me to understand the shitpile *Schulportal Hessen*.
 
 The Android-App [sph-planner](https://github.com/koenidv/sph-planner) *(if you know Kotlin, you can contribute to this app)* from [@koenidv](https://github.com/koenidv) helped me to understand the Level 2 encryption.
 
