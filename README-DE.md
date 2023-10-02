@@ -20,7 +20,7 @@ Dieses Beispiel gibt dir den Vertretungsplan.
 from lanisapi import LanisClient
 
 def main():
-    client = LanisClient("schoolid", "name.lastname", "password")
+    client = LanisClient("schulid", "name.nachname", "passwort")
     client.authenticate()
     print(client.get_substitution_plan())
     client.logout()
