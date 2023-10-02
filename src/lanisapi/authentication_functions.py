@@ -1,6 +1,6 @@
 import httpx
 
-ad_header = { "user-agent": "LanisClient by kurwjan and contributors (soon on github)" }
+ad_header = { "user-agent": "LanisClient by kurwjan and contributors (https://github.com/kurwjan/LanisAPI/)" }
 
 def get_session(schoolid, username, password):
     url = "https://login.schulportal.hessen.de/"

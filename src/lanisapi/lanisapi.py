@@ -14,7 +14,7 @@ class LanisClient:
     authenticated = False
     auth_cookies = httpx.Cookies
     logger = logging.getLogger("LanisClient")
-    ad_header = { "user-agent": "LanisClient by kurwjan and contributors (soon on github)" }
+    ad_header = { "user-agent": "LanisClient by kurwjan and contributors (https://github.com/kurwjan/LanisAPI/)" }
 
     @dataclass
     class SubstitutionData:
