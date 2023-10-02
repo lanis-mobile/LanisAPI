@@ -3,7 +3,7 @@
 # LanisAPI
 
 > # ⚠ Hinweis
-> **Da das Schulportal Hessen sich schnell ändert und fragmentiert ist, *(ungerfähr wie die Backwards-Compability bei Linux-Bibliotheken)* können einige Funktionen bei bestimmten Schulen oder nach einer Zeit nicht mehr funktionieren.**
+> **Da das Schulportal Hessen sich schnell ändert und fragmentiert ist, *(ungefähr wie die Backwards-Compability bei Linux-Bibliotheken)* können einige Funktionen bei bestimmten Schulen oder nach einer Zeit nicht mehr funktionieren.**
 
 ## Was ist das?
 Eine unoffiziele Pythonbibliothek für das Schulportal Hessen. Auch auf [PyPi](https://pypi.org/project/lanisapi/) verfügbar.
