@@ -17,6 +17,12 @@ class LanisClient:
     ad_header = { "user-agent": "LanisClient by kurwjan and contributors (https://github.com/kurwjan/LanisAPI/)" }
 
     @dataclass
+    class SubstitutionPlan:
+        info: str
+        date: datetime
+        data: list
+    
+    @dataclass
     class SubstitutionData:
         substitute: str
         teacher: str
