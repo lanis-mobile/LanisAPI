@@ -28,7 +28,7 @@ def main():
 if __name__ == "__main__":
     main()
 ```
-More infos at the wiki.
+More infos at the [wiki](https://github.com/kurwjan/LanisAPI/wiki/First-steps).
 
 ## Overview of future Features, Problems and other things [here](https://github.com/users/kurwjan/projects/2).
 
