@@ -1,7 +1,7 @@
 import httpx
 from selectolax.parser import HTMLParser
 from dataclasses import dataclass
-from urllib.parse import urlparse, urljoin
+from urllib.parse import urlparse
 import logging
 from functools import wraps
 import re
@@ -15,51 +15,57 @@ class LanisClient:
     auth_cookies = httpx.Cookies
     logger = logging.getLogger("LanisClient")
     ad_header = { "user-agent": "LanisClient by kurwjan and contributors (https://github.com/kurwjan/LanisAPI/)" }
-
+    
     @dataclass
-    class SubstitutionData:
-        substitute: str
-        teacher: str
-        hours: str
-        class_name: str
-        subject: str
-        room: str
-        notice: str
+    class SubstitutionPlan:
+        class SubstitutionData:
+            substitute: str
+            teacher: str
+            hours: str
+            class_name: str
+            subject: str
+            room: str
+            notice: str
+
+        info: str
+        date: datetime
+        data: list[SubstitutionData]
 
     @dataclass
     class Calendar:
+        @dataclass
+        class CalendarData:
+            title: str
+            description: str
+            place: str
+            start: datetime
+            end: datetime
+            all_day: bool
+        
         start: datetime
         end: datetime
-        data: list
-
-    @dataclass
-    class CalendarData:
-        title: str
-        description: str
-        place: str
-        start: datetime
-        end: datetime
-        all_day: bool
+        data: list[CalendarData] = None
+        json: list[dict[str]] = None
 
     @dataclass
     class TaskData:
+        class AttachmentDownload:
+            def __init__(self, url, cookies, ad_header):
+                self.url = url
+                self.cookies = cookies
+                self.ad_header = ad_header
+
+            def download(self) -> httpx.Response:
+                return httpx.get("https://start.schulportal.hessen.de/meinunterricht.php", params=self.url.query, cookies=self.cookies, headers=self.ad_header)
+        
         title: str
         description: str
-        details = "WIP"
+        #details: str
         date: datetime
         subject_name: str
         teacher: str
-        attachment: list
-        attachment_url: any
-
-    class AttachmentDownload:
-        def __init__(self, url, cookies, ad_header):
-            self.url = url
-            self.cookies = cookies
-            self.ad_header = ad_header
-
-        def download(self):
-            return httpx.get("https://start.schulportal.hessen.de/meinunterricht.php", params=self.url.query, cookies=self.cookies, headers=self.ad_header)
+        attachment: list[str]
+        attachment_url: AttachmentDownload
 
     def requires_auth(f):
         @wraps(f)
@@ -70,14 +76,14 @@ class LanisClient:
             return f(*args, **kwargs)
         return decorated
 
-    def __init__(self, schoolid, username, password):
+    def __init__(self, schoolid: str, username: str, password: str) -> None:
         self.schoolid = schoolid
         self.username = username
         self.password = password
         logging.basicConfig(level=logging.INFO, format="%(levelname)s - %(name)s   %(message)s")
         self.logger.warning("IMPORTANT: Schulportal Hessen can change things quickly and is fragmented (some schools work, some not), so expect something to not be working")
 
-    def authenticate(self):
+    def authenticate(self) -> None:
         if self.authenticated:
             self.logger.warning("A1: Already authenticated.")
             return;
@@ -97,7 +103,7 @@ class LanisClient:
 
         self.logger.info("A0: Successfully authenticated.")
 
-    def _get_substitution_info(self):
+    def _get_substitution_info(self) -> dict[str, str]:
         url = "https://start.schulportal.hessen.de/vertretungsplan.php"
         page = httpx.get(url, cookies=self.auth_cookies, headers=self.ad_header)
         html = HTMLParser(page.text)
@@ -108,14 +114,14 @@ class LanisClient:
         return {"notice": notice, "date": date}
     
     @requires_auth
-    def logout(self):
+    def logout(self) -> None:
         url = "https://start.schulportal.hessen.de/index.php?logout=all"
         httpx.get(url, cookies=self.auth_cookies, headers=self.ad_header)
         self.authenticated = False
         self.logger.info("A4: Logged out.")
 
     @requires_auth
-    def get_substitution_plan(self):
+    def get_substitution_plan(self) -> SubstitutionPlan:
         url = "https://start.schulportal.hessen.de/vertretungsplan.php"
         info = self._get_substitution_info()
         data = {"ganzerPlan": "true", "tag": info["date"]}
@@ -124,14 +130,14 @@ class LanisClient:
 
         plan = self.SubstitutionPlan(info["notice"], datetime.strptime(info["date"], '%d.%m.%Y').date(), [])
         for data in substitution_raw_data.json():
-            substitution_data = self.SubstitutionData(
-                data["Vertreter"],
-                data["Lehrer"],
-                data["Stunde"],
-                data["Klasse"],
-                data["Fach"],
-                data["Raum"],
-                data["Hinweis"],
+            substitution_data = self.SubstitutionPlan.SubstitutionData(
+                substitute=data["Vertreter"],
+                teacher=data["Lehrer"],
+                hours=data["Stunde"],
+                class_name=data["Klasse"],
+                subject=data["Fach"],
+                room=data["Raum"],
+                notice=data["Hinweis"],
             )
             plan.data.append(substitution_data)
 
@@ -140,7 +146,7 @@ class LanisClient:
         return plan
     
     @requires_auth
-    def get_calendar_of_month(self):
+    def get_calendar_of_month(self) -> Calendar:
         today = date.today()
 
         _, last_day = calendar.monthrange(int(today.strftime('%Y')), int(today.strftime('%-m')))
@@ -150,21 +156,30 @@ class LanisClient:
         return self.get_calendar(first_date, last_date)
     
     @requires_auth
-    def get_calendar(self, start, end):
+    def get_calendar(self, start: datetime, end: datetime, json: bool = True) -> Calendar:
         url = "https://start.schulportal.hessen.de/kalender.php"
-        data = {"f": "getEvents", "start": start, "end": end}
+        data = {"f": "getEvents", "start": start.strftime('%Y-%m-%d'), "end": end.strftime('%Y-%m-%d')}
 
         calendar_raw_data = httpx.post(url, data=data, headers=self.ad_header, cookies=self.auth_cookies)
+        
+        if json:
+            calendar = self.Calendar(start, end, json=[])
+            for data in calendar_raw_data.json():
+                calendar.json.append(data)
+            
+            self.logger.info("C1: Successfully got calendar in JSON format")
+            
+            return calendar
 
-        calendar = self.Calendar(datetime.strptime(start, '%Y-%m-%d'), datetime.strptime(end, '%Y-%m-%d'), [])
+        calendar = self.Calendar(start, end, data=[])
         for data in calendar_raw_data.json():
-            calendar_data = self.CalendarData(
-                data["title"],
-                data["description"],
-                data["Ort"],
-                datetime.strptime(data["Anfang"], '%Y-%m-%d %H:%M:%S'),
-                datetime.strptime(data["Ende"], '%Y-%m-%d %H:%M:%S'),
-                data["allDay"],
+            calendar_data = self.Calendar.CalendarData(
+                title=data["title"],
+                description=data["description"],
+                place=data["Ort"],
+                start=datetime.strptime(data["Anfang"], '%Y-%m-%d %H:%M:%S'),
+                end=datetime.strptime(data["Ende"], '%Y-%m-%d %H:%M:%S'),
+                all_day=data["allDay"],
             )
             calendar.data.append(calendar_data)
 
@@ -217,13 +232,13 @@ class LanisClient:
                     attachments.append(second_attachment_elements[i].css_first("a").attributes["data-file"])
                     
             task_list.append(self.TaskData(
-                title,
-                description,
-                date,
-                subject_name,
-                teacher,
-                attachments,
-                self.AttachmentDownload(attachment_url, self.auth_cookies, self.ad_header),
+                title=title,
+                description=description,
+                date=date,
+                subject_name=subject_name,
+                teacher=teacher,
+                attachment=attachments,
+                attachment_url=self.TaskData.AttachmentDownload(attachment_url, self.auth_cookies, self.ad_header),
             ))
 
         self.logger.info("D0: Successfully got tasks")
