@@ -45,7 +45,7 @@ def get_authentication_data(url: str,
                             cookies: httpx.Cookies,
                             parser: httpx.Client,
                             ad_header: httpx.Headers,
-                            schoolid: int
+                            schoolid: str
                             ) -> httpx.Cookies:
     
     response = parser.get(url, cookies=cookies, headers=ad_header)

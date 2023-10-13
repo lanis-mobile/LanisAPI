@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "lanisapi"
-version = "0.0.3"
+version = "0.1.1"
 authors = [
     { name = "kurwjan" }
 ]
@@ -32,3 +32,4 @@ dependencies = [
 [project.urls]
 "Homepage" = "https://github.com/kurwjan/LanisAPI"
 "Bug Tracker" = "https://github.com/kurwjan/LanisAPI/issues"
+"Documentation" = "https://lanisapi.readthedocs.io/"
