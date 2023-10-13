@@ -184,6 +184,8 @@ class LanisClient:
         self.parser.close()
         
     def close(self) -> None:
+        """Closes the client; you need to do this.
+        """
         self.parser.close()
         self.authenticated = False
         

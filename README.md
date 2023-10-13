@@ -3,7 +3,7 @@
 # LanisAPI
 
 > ## ⚠ Notice
-> **Because the Schulportal Hessen changes quickly and is very fragmented, can some functions at specific schools or after a time not be working anymore.**
+> **Because the Schulportal Hessen changes quickly and is very fragmented, some functions at specific schools or after a while may no longer work.**
 
 ## What is this?
 
@@ -42,13 +42,15 @@ if __name__ == "__main__":
     main()
 ```
 
-More infos at the [wiki](https://github.com/kurwjan/LanisAPI/wiki/First-steps).
+More infos at the [wiki](https://lanisapi.readthedocs.io/en/latest/first_steps.html).
 
 ## How can I help?
 
-1. You can report Problems at *Issues*.
-2. You can suggest Ideas at *Issues*.
-3. **Contributing**: You can contribute to this project. If you're new to contributing, look [here](https://docs.github.com/en/get-started/quickstart/contributing-to-projects).
+1. You can report problems at *Issues*.
+2. You can suggest ideas at *Issues*.
+3. **Contributing**: You can contribute to this project either by code or improving the wiki. If you're new to contributing, look [here](https://docs.github.com/en/get-started/quickstart/contributing-to-projects).
+
+*Also if you like this project you can give it a star.*
 
 ## Credits
 
@@ -58,10 +60,10 @@ The Android-App [sph-planner](https://github.com/koenidv/sph-planner) from [@koe
 
 Other projects that didn't helped me but are cool:
 
++ **Good TypeScript library [Maria](https://github.com/elderguardian/maria) from [Elderguardian](https://github.com/elderguardian/)**
 + Flutter Android app [SPH-Vertretungsplan](https://github.com/alessioC42/SPH-vertretungsplan) also from [@alessioC42](https://github.com/alessioC42)
 + Javascript app [SchulportalApp](https://github.com/DerOwnerHD/SchulportalApp) from [DerOwnerHD](https://github.com/DerOwnerHD)
 + Flutter Android app [lkwslr-sphplaner](https://github.com/flutter-preview/lkwslr-sphplaner) from [flutter-preview](https://github.com/flutter-preview)
-+ TypeScript library [Maria](https://github.com/elderguardian/maria) from [Elderguardian](https://github.com/elderguardian/)
 
 ## Notice
 

@@ -42,13 +42,15 @@ if __name__ == "__main__":
     main()
 ```
 
-Mehr Infos bei der [Wiki](https://github.com/kurwjan/LanisAPI/wiki/First-steps).
+Mehr Infos bei der [Wiki](https://lanisapi.readthedocs.io/en/latest/first_steps.html).
 
 ## Wie kann ich mithelfen
 
 1. Du kannst bei *Issues* Probleme die du findest melden.
 2. Du kannst bei *Issues* Ideenvorschläge machen.
 3. **Beim Programmieren beitragen**: Mehr Infos [hier](https://docs.github.com/en/get-started/quickstart/contributing-to-projects), falls du neu bist.
+
+*Übrigens, wenn dir dieses Projekt gefällt, kannst du es auch einen Stern geben.*
 
 ## Credits
 
@@ -58,10 +60,10 @@ Die Android-App [sph-planner](https://github.com/koenidv/sph-planner) von [@koen
 
 Andere Projekte die mir nicht unbedingt geholfen haben, aber trotzdem cool sind:
 
++ **Gute TypeScript Bibliothek [Maria](https://github.com/elderguardian/maria) von [Elderguardian](https://github.com/elderguardian/)**
 + Flutter Android App [SPH-Vertretungsplan](https://github.com/alessioC42/SPH-vertretungsplan) auch von [@alessioC42](https://github.com/alessioC42)
 + Javascript App [SchulportalApp](https://github.com/DerOwnerHD/SchulportalApp) von [DerOwnerHD](https://github.com/DerOwnerHD)
 + Flutter Android App [lkwslr-sphplaner](https://github.com/flutter-preview/lkwslr-sphplaner) von [flutter-preview](https://github.com/flutter-preview)
-+ TypeScript Bibliothek [Maria](https://github.com/elderguardian/maria) von [Elderguardian](https://github.com/elderguardian/)
 
 ## Hinweis
 
