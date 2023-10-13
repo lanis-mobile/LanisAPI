@@ -209,7 +209,8 @@ class LanisClient:
         auth_url = get_authentication_url(response_cookies, self.parser, self.ad_header)
         
         self.parser.cookies = get_authentication_data(auth_url, response_cookies,
-                                                      self.parser, self.ad_header)
+                                                      self.parser, self.ad_header,
+                                                      schoolid=self.schoolid)
 
         self.authenticated = True
 
