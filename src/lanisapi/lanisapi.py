@@ -15,17 +15,19 @@ class LanisClient:
     """
     The interface between python and Schulportal Hessen.
     
-    ### Parameters
-    -------
-    1. schoolid : ``string``
-        - The id of the school which you can see it in the url at ``i=``.
-    2. username : ``string``
-        - The username in ``firstname.lastname``.
-    3. password : ``string``
-        -  The password.
-    4. ad_header : ``httpx.Headers``
-        - Send custom headers to Lanis. Primarily used to send a
-          custom ``user-agent``.
+    Use ``authenticate()`` to use this interface.
+    
+    Parameters
+    ----------
+    schoolid : str
+        The id of the school which you can see it in the url at ``i=``.
+    username : str
+        The username in firstname.lastname.
+    password : str
+        The password.
+    ad_header : httpx.Headers
+        Send custom headers to Lanis. Primarily used to send a
+        custom ``user-agent``.
     """
     
     authenticated = False
@@ -34,14 +36,31 @@ class LanisClient:
     @dataclass
     class SubstitutionPlan:
         """
-        #### The substitution plan page in a data type.
-        Use ``data`` to access the data.
+        The substitution plan page in a data type.
         
-        ``info`` is the box with the title "Allgemein" that exists sometimes.
+        Parameters
+        ----------
+        date : datetime.datetime
+        data : list[SubstitutionData]
+        info : str, optional
+            ``info`` is the box with the title "Allgemein" that exists sometimes.
         """
         
         @dataclass
         class SubstitutionData:
+            """
+            The individual substitution data (table row).
+            
+            Parameters
+            ----------
+            substitute : str
+            teacher : str
+            hours : str
+            class_name : str
+            subject : str
+            room : str
+            notice : str
+            """
             substitute: str
             teacher: str
             hours: str
@@ -57,15 +76,37 @@ class LanisClient:
     @dataclass
     class Calendar:
         """
-        #### The calendar page in a data type.
-        Use ``data`` to access the most important properties.
-        Use ``json`` to access all properties.
+        The calendar page in a data type.
         
+        Parameters
+        ----------
+        start : datetime.datetime
+        end : datetime.datetime
+        data : list[CalendarData] or None
+            Use data to access the most important properties.
+        json : list[dict[str, any]] or None
+            Use ``json`` to access all properties.
+        
+        Notes
+        -----
         Don't forget that ``start`` and ``end`` can also include hours and minutes.
         """
         
         @dataclass
         class CalendarData:
+            """
+            Each calendar cell "event" data.
+            
+            Parameters
+            ----------
+            title : str
+            description : str
+            place : str
+            start : datetime.datetime
+            end : datetime.datetime
+            whole_day : bool
+            """
+            
             title: str
             description: str
             place: str
@@ -81,9 +122,19 @@ class LanisClient:
     @dataclass
     class TaskData:
         """
-        #### The "Mein Unterricht" page in a data type.
+        The "Mein Unterricht" page in a data type.
         
-        ``details`` is the blue button with a comment symbol that sometimes appears.
+        Parameters
+        ----------
+        title : str
+        date : datetime.datetime
+        subject_name : str
+        teacher : str
+        description : str, optional
+        details : str, optional
+            ``details`` is the blue button with a comment symbol that sometimes appears.
+        attachment : list[str], optional
+        attachment_url : urllib.parse.ParseResult, optional
         """
         
         title: str
@@ -138,15 +189,12 @@ class LanisClient:
         
 
     def authenticate(self) -> None:
-        """
-        #### This function must be executed once to use other functions.
-        
-        Logs into the school portal and sets the session id in the auth_cookies.
+        """Logs into the school portal and sets the session id in the auth_cookies.
         """
         
         if self.authenticated:
             self.logger.warning("A1: Already authenticated.")
-            return;
+            return
 
         response_session = get_session(self.schoolid, self.username,
                                        self.password,self.parser, self.ad_header)
@@ -185,8 +233,7 @@ class LanisClient:
     
     @requires_auth
     def logout(self) -> None:
-        """
-        Logs out.
+        """Logs out.
         """
         
         url = "https://start.schulportal.hessen.de/index.php?logout=all"
@@ -199,9 +246,9 @@ class LanisClient:
         """
         Returns the whole substitution plan of the current day.
 
-        ### Returns
+        Returns
         -------
-        - ``SubstitutionPlan``
+        SubstitutionPlan
         """
         
         url = "https://start.schulportal.hessen.de/vertretungsplan.php"
@@ -238,10 +285,10 @@ class LanisClient:
         """
         Uses the get_calendar() function but only returns all events of the current month.
 
-        ### Returns
+        Returns
         -------
-        - ``Calendar``
-            -  Calendar type with CalendarData
+        Calendar
+            Calendar type with CalendarData
         """
         
         today = date.today()
@@ -255,24 +302,24 @@ class LanisClient:
     
     @requires_auth
     def get_calendar(self, start: datetime,
-                    end: datetime, json: bool = True) -> Calendar:
+                    end: datetime, json: bool = False) -> Calendar:
         """
         Returns all calendar events between the start and end date.
 
-        ### Parameters
-        -------
-        1. start : ``datetime``
-            - Start date
-        2. end : ``datetime``
-            - End date
-        3. json : ``datetime, optional``
-            -   Returns Json with every property instead of the limited CalendarData.
-                Defaults to True.
+        Parameters
+        ----------
+        start : datetime.datetime
+            Start date
+        end : datetime.datetime
+            End date
+        json : bool, default False
+            Returns Json with every property instead of the limited CalendarData.
+            Defaults to False.
 
-        ### Returns
+        Returns
         -------
-        - ``Calendar``
-            - Calendar type with CalendarData or Json.
+        Calendar
+            Calendar type with CalendarData or Json.
         """
         
         url = "https://start.schulportal.hessen.de/kalender.php"
@@ -309,12 +356,11 @@ class LanisClient:
     @requires_auth
     def get_tasks(self) -> list[TaskData]:
         """
-        Returns all tasks from the "Mein Unterricht" page 
-        also with the download link of all attachments in .zip format.
+        Returns all tasks from the "Mein Unterricht" page in .zip format.
 
-        ### Returns
+        Returns
         -------
-        - ``list[TaskData]``
+        list[TaskData]
         """
         
         url = "https://start.schulportal.hessen.de/meinunterricht.php"

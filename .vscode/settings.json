@@ -7,5 +7,6 @@
         "levelname",
         "schoolid",
         "selectolax"
-    ]
+    ],
+    "esbonio.sphinx.confDir": ""
 }
