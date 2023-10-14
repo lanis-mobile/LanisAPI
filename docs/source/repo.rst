@@ -11,7 +11,7 @@ Git Repo
 This project is hosted on Github thus using ``Git``:
 
 * Link to repo: https://github.com/kurwjan/LanisAPI
-* Link to clone locally: ``git clone https://github.com/kurwjan/LanisAPI.git``
+* Command to clone locally: ``git clone https://github.com/kurwjan/LanisAPI.git``
 
 Bug Tracker
 -----------

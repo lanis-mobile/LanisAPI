@@ -25,7 +25,7 @@ class LanisClient:
         The username in firstname.lastname.
     password : str
         The password.
-    ad_header : httpx.Headers
+    ad_header : httpx.Headers, default {"user-agent": ....}
         Send custom headers to Lanis. Primarily used to send a
         custom ``user-agent``.
     """
@@ -41,7 +41,9 @@ class LanisClient:
         Parameters
         ----------
         date : datetime.datetime
+            Date of the substitution plan.
         data : list[SubstitutionData]
+            The individual substitutions.
         info : str, optional
             ``info`` is the box with the title "Allgemein" that exists sometimes.
         """
@@ -54,12 +56,19 @@ class LanisClient:
             Parameters
             ----------
             substitute : str
+                Often abbreviation of the substitute.
             teacher : str
+                Often abbreviation of the teacher.
             hours : str
+                When is it in school hours.
             class_name : str
+                Name of the classes.
             subject : str
+                The subject is rarely given.
             room : str
+                Room of the substitution.
             notice : str
+                More info about the substitution.
             """
             substitute: str
             teacher: str
@@ -81,15 +90,15 @@ class LanisClient:
         Parameters
         ----------
         start : datetime.datetime
+            Start date and time of the calendar.
         end : datetime.datetime
+            End date and time of the calendar.
         data : list[CalendarData] or None
             Use data to access the most important properties.
+            You need to use get_calendar(json=False) to get this.
         json : list[dict[str, any]] or None
             Use ``json`` to access all properties.
-        
-        Notes
-        -----
-        Don't forget that ``start`` and ``end`` can also include hours and minutes.
+            You need to use get_calendar(json=True) to get this.
         """
         
         @dataclass
@@ -100,11 +109,18 @@ class LanisClient:
             Parameters
             ----------
             title : str
+                Name of the event.
             description : str
+                Description of the event.
             place : str
+                Place of the event.
             start : datetime.datetime
+                Start day and time of the event.
             end : datetime.datetime
+                End day and time of the event.
+                Could also exceed the calendars start and end.
             whole_day : bool
+                Does it happen the whole day or only between a specific time.
             """
             
             title: str
@@ -127,14 +143,22 @@ class LanisClient:
         Parameters
         ----------
         title : str
+            Name of the task.
         date : datetime.datetime
+            Creation date of the task.
         subject_name : str
+            Subject of the task often with the class name and weird ids at the end,
+            like "Chemie 7GA (071CH01-GYM)"
         teacher : str
+            Abbreviation of the teacher.
         description : str, optional
+            Optional description of the task.
         details : str, optional
             ``details`` is the blue button with a comment symbol that sometimes appears.
         attachment : list[str], optional
+            List of the attachments names.
         attachment_url : urllib.parse.ParseResult, optional
+            Download link to a zip file containing all attachments.
         """
         
         title: str
@@ -286,7 +310,8 @@ class LanisClient:
     @requires_auth
     def get_calendar_of_month(self) -> Calendar:
         """
-        Uses the get_calendar() function but only returns all events of the current month.
+        Uses the get_calendar() function but only returns all events
+        of the current month.
 
         Returns
         -------

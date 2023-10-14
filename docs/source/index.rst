@@ -7,7 +7,7 @@
     
     first_steps
     repo
-    api/index
+    api
 
 LanisAPI
 ========
@@ -57,4 +57,5 @@ How can I help?
 
 Credits
 -------
-WIP
+* `SPHclient <https://github.com/alessioC42/SPHclient>`__ helped me to understand the *Schulportal Hessen*.
+* `sph-planner <https://github.com/koenidv/sph-planner>`__ helped me to understand the Level 2 encryption.

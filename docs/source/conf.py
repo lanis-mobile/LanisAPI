@@ -6,8 +6,8 @@ project = 'LanisAPI'
 copyright = '2023, kurwjan'
 author = 'kurwjan'
 
-release = '0.1.0'
-version = '0.1.0'
+release = '0.1.1'
+version = '0.1.1'
 
 # -- General configuration
 
@@ -32,3 +32,7 @@ templates_path = ['_templates']
 
 html_theme = "furo"
 html_title = "LanisAPI"
+
+# -- don't show lanisapi.LanisClient at the beginning
+
+add_module_names = False
