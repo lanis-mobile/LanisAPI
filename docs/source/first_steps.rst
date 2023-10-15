@@ -40,6 +40,7 @@ Example code
 
     def main():
         client = LanisClient("schoolid", "name.lastname", "password")
+            or: client = LanisClient(LanisClient.School("Testschule MH", "Testhausen City"), "password")
         client.authenticate()
         print(client.get_substitution_plan())
         client.close()
@@ -48,6 +49,7 @@ Example code
         main()
 
 1. First you initialise the ``LanisClient`` class with the ``schoolid`` you can find it in the url at ``?=i`` in https://start.schulportal.hessen.de/?i=SCHOOLID.
-2. Then you log in with ``authenticate()``.
-3. Then we print the current substitution plan.
-4. Then we close the client. **You need to do this.**
+2. Or you initalise it with School(``school``, ``city``).
+3. Then you log in with ``authenticate()``.
+4. Then we print the current substitution plan.
+5. Then we close the client. **You need to do this.**

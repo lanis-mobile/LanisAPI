@@ -21,6 +21,19 @@ General functions
 
 .. autofunction:: close
 
+Get all schools
+~~~~~~~~~~~~~~~~~~~
+
+Functions
+^^^^^^^^^
+
+.. autofunction:: get_schools
+
+Types
+^^^^^
+
+.. autoclass:: School
+
 Substitution plan
 ~~~~~~~~~~~~~~~~~
 
