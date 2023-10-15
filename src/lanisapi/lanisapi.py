@@ -8,6 +8,8 @@ from functools import wraps
 import re
 from datetime import datetime, date
 import calendar
+import json
+import os.path
 
 from .authentication_functions import get_authentication_data, get_authentication_url, get_session
 
@@ -19,12 +21,15 @@ class LanisClient:
     
     Parameters
     ----------
-    schoolid : str
-        The id of the school which you can see it in the url at ``i=``.
+    school : str | School
+        1. The id of the school which you can see it in the url at ``i=``.
+        2. The school name and city in ``School``.
     username : str
         The username in firstname.lastname.
     password : str
         The password.
+    save : bool, default True
+        If False the school list and future things won't be saved to a file.
     ad_header : httpx.Headers, default {"user-agent": ....}
         Send custom headers to Lanis. Primarily used to send a
         custom ``user-agent``.
@@ -134,6 +139,21 @@ class LanisClient:
         end: datetime
         data: list[CalendarData] = None
         json: list[dict[str, any]] = None
+        
+    @dataclass
+    class School:
+        """
+        Alternative to school id for authentication.
+        
+        Parameters
+        ----------
+        name : str
+            Full school name
+        city : str
+            City name sometimes with abbreviations or fully written.
+        """
+        name: str
+        city: str
 
     @dataclass
     class TaskData:
@@ -170,27 +190,21 @@ class LanisClient:
         attachment: Optional[list[str]] = None
         attachment_url: Optional[ParseResult] = None
 
-    def requires_auth(f):
-        @wraps(f)
-        def decorated(*args, **kwargs):
-            if not args[0].authenticated:
-                args[0].logger.error("A2: Not authenticated.")
-                return
-            return f(*args, **kwargs)
-        return decorated
-
     def __init__(self,
-                 schoolid: str,
+                 school: str | School,
                  username: str,
                  password: str,
+                 save: bool = True,
                  ad_header: httpx.Headers = 
                  httpx.Headers({ "user-agent": 
                      "LanisClient by kurwjan and contributors (https://github.com/kurwjan/LanisAPI/)" })
                  ) -> None:
         
-        self.schoolid = schoolid
+        self.school = school
         self.username = username
         self.password = password
+        
+        self.save = save
         
         self.ad_header = ad_header
         
@@ -207,12 +221,50 @@ class LanisClient:
     def __del__(self) -> None:
         self.parser.close()
         
+    def requires_auth(f):
+        @wraps(f)
+        def decorated(*args, **kwargs):
+            if not args[0].authenticated:
+                args[0].logger.error("A2: Not authenticated.")
+                return
+            return f(*args, **kwargs)
+        return decorated
+        
     def close(self) -> None:
         """Closes the client; you need to do this.
         """
         self.parser.close()
         self.authenticated = False
         
+    def get_schools(self):
+        """
+        Returns all schools with their id, name and city.
+        
+        Returns
+        -------
+        list[dict[str, str]]
+            JSON
+        """
+        
+        if os.path.exists("schools.json"):
+            with open("schools.json", "r") as file:
+                return json.load(file)
+            
+        url = "https://startcache.schulportal.hessen.de/exporteur.php"
+            
+        response = self.parser.get(url, params=httpx.QueryParams({"a": "schoollist"})).json()
+        
+        schools = []
+
+        for group in response:
+            for school in group["Schulen"]:
+                schools.append(school)
+                
+        if self.save is True:
+            with open("schools.json", "w") as file:
+                    json.dump(schools, file)
+                
+        return schools
 
     def authenticate(self) -> None:
         """Logs into the school portal and sets the session id in the auth_cookies.
@@ -221,8 +273,21 @@ class LanisClient:
         if self.authenticated:
             self.logger.warning("A1: Already authenticated.")
             return
+        
+        school_id: int
+        
+        if isinstance(self.school, str):
+            school_id = self.school
+        else:
+            schools = self.get_schools()
+            
+            try:
+                school_id = next(school for school in schools if school["Name"] == self.school.name and school["Ort"] == self.school.city)["Id"]
+            except StopIteration:
+                self.logger.warning("E0: School doesn't exist check for right spelling.")
+                return
 
-        response_session = get_session(self.schoolid, self.username,
+        response_session = get_session(school_id, self.username,
                                        self.password,self.parser, self.ad_header)
         response_cookies = response_session["cookies"]
     
@@ -234,7 +299,7 @@ class LanisClient:
         
         self.parser.cookies = get_authentication_data(auth_url, response_cookies,
                                                       self.parser, self.ad_header,
-                                                      schoolid=self.schoolid)
+                                                      schoolid=school_id)
 
         self.authenticated = True
 
