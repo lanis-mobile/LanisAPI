@@ -1,12 +1,13 @@
 import httpx
 
+
 def get_session(schoolid: str,
                 username: str,
                 password: str,
                 parser: httpx.Client,
                 ad_header: httpx.Headers
                 ) -> dict[str, any]:
-    
+
     url = "https://login.schulportal.hessen.de/"
     params = { "i": schoolid }
     data = {
@@ -33,13 +34,11 @@ def get_authentication_url(
     parser: httpx.Client,
     ad_header: httpx.Headers
     ) -> str:
-    
+
     url = "https://connect.schulportal.hessen.de/"
     response = parser.get(url, cookies=cookies, headers=ad_header) 
 
-    auth_url = response.headers.get("location")
-
-    return auth_url
+    return response.headers.get("location")
 
 def get_authentication_data(url: str,
                             cookies: httpx.Cookies,
@@ -47,7 +46,7 @@ def get_authentication_data(url: str,
                             ad_header: httpx.Headers,
                             schoolid: str
                             ) -> httpx.Cookies:
-    
+
     response = parser.get(url, cookies=cookies, headers=ad_header)
 
     cookies = httpx.Cookies()

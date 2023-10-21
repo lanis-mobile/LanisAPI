@@ -1,24 +1,30 @@
-from typing import Optional
-import httpx
-from selectolax.parser import HTMLParser
-from dataclasses import dataclass
-from urllib.parse import urlparse, ParseResult
-import logging
-from functools import wraps
-import re
-from datetime import datetime, date
 import calendar
 import json
+import logging
 import os.path
+import re
+from dataclasses import dataclass
+from datetime import date, datetime, timedelta, timezone
+from functools import wraps
+from typing import Optional
+from urllib.parse import ParseResult, urlparse
 
-from .authentication_functions import get_authentication_data, get_authentication_url, get_session
+import httpx
+from selectolax.parser import HTMLParser
+
+from .helpers.authentication import (
+    get_authentication_data,
+    get_authentication_url,
+    get_session,
+)
+from .helpers.cryptor import Cryptor
+
 
 class LanisClient:
-    """
-    The interface between python and Schulportal Hessen.
-    
+    """The interface between python and Schulportal Hessen.
+
     Use ``authenticate()`` to use this interface.
-    
+
     Parameters
     ----------
     school : str | School
@@ -34,15 +40,11 @@ class LanisClient:
         Send custom headers to Lanis. Primarily used to send a
         custom ``user-agent``.
     """
-    
-    authenticated = False
-    logger = logging.getLogger("LanisClient")
-    
+
     @dataclass
     class SubstitutionPlan:
-        """
-        The substitution plan page in a data type.
-        
+        """The substitution plan page in a data type.
+
         Parameters
         ----------
         date : datetime.datetime
@@ -52,12 +54,11 @@ class LanisClient:
         info : str, optional
             ``info`` is the box with the title "Allgemein" that exists sometimes.
         """
-        
+
         @dataclass
         class SubstitutionData:
-            """
-            The individual substitution data (table row).
-            
+            """The individual substitution data (table row).
+
             Parameters
             ----------
             substitute : str
@@ -75,6 +76,7 @@ class LanisClient:
             notice : str
                 More info about the substitution.
             """
+
             substitute: str
             teacher: str
             hours: str
@@ -89,9 +91,8 @@ class LanisClient:
 
     @dataclass
     class Calendar:
-        """
-        The calendar page in a data type.
-        
+        """The calendar page in a data type.
+
         Parameters
         ----------
         start : datetime.datetime
@@ -105,12 +106,11 @@ class LanisClient:
             Use ``json`` to access all properties.
             You need to use get_calendar(json=True) to get this.
         """
-        
+
         @dataclass
         class CalendarData:
-            """
-            Each calendar cell "event" data.
-            
+            """Each calendar cell "event" data.
+
             Parameters
             ----------
             title : str
@@ -127,24 +127,23 @@ class LanisClient:
             whole_day : bool
                 Does it happen the whole day or only between a specific time.
             """
-            
+
             title: str
             description: str
             place: str
             start: datetime
             end: datetime
             whole_day: bool
-        
+
         start: datetime
         end: datetime
         data: list[CalendarData] = None
         json: list[dict[str, any]] = None
-        
+
     @dataclass
     class School:
-        """
-        Alternative to school id for authentication.
-        
+        """Alternative to school id for authentication.
+
         Parameters
         ----------
         name : str
@@ -152,14 +151,14 @@ class LanisClient:
         city : str
             City name sometimes with abbreviations or fully written.
         """
+
         name: str
         city: str
 
     @dataclass
     class TaskData:
-        """
-        The "Mein Unterricht" page in a data type.
-        
+        """The "Mein Unterricht" page in a data type.
+
         Parameters
         ----------
         title : str
@@ -180,7 +179,7 @@ class LanisClient:
         attachment_url : urllib.parse.ParseResult, optional
             Download link to a zip file containing all attachments.
         """
-        
+
         title: str
         date: datetime
         subject_name: str
@@ -195,24 +194,26 @@ class LanisClient:
                  username: str,
                  password: str,
                  save: bool = True,
-                 ad_header: httpx.Headers = 
-                 httpx.Headers({ "user-agent": 
-                     "LanisClient by kurwjan and contributors (https://github.com/kurwjan/LanisAPI/)" })
+                 ad_header: httpx.Headers = None,
                  ) -> None:
-        
+
         self.school = school
         self.username = username
         self.password = password
-        
+
         self.save = save
-        
-        self.ad_header = ad_header
-        
+
+        self.ad_header = ad_header if ad_header is not None else httpx.Headers({ "user-agent":
+                        "LanisClient by kurwjan and contributors (https://github.com/kurwjan/LanisAPI/)" })
+
         self.parser = httpx.Client(headers=ad_header)
-        
+
+        self.authenticated = False
+        self.logger = logging.getLogger("LanisClient")
+
         logging.basicConfig(
             level=logging.INFO, format="%(levelname)s - %(name)s   %(message)s")
-    
+
         self.logger.warning(
             "IMPORTANT: Schulportal Hessen can change things quickly"
             "and is fragmented (some schools work, some not),"
@@ -220,67 +221,80 @@ class LanisClient:
 
     def __del__(self) -> None:
         self.parser.close()
-        
-    def requires_auth(f):
-        @wraps(f)
+
+    def _get_substitution_info(self) -> dict[str, str]:
+        url = "https://start.schulportal.hessen.de/vertretungsplan.php"
+        page = self.parser.get(url)
+        html = HTMLParser(page.text)
+
+        notice_element = html.css_first(
+            ".infos > tbody:nth-child(1) > tr:nth-child(2) > td:nth-child(1)"
+            )
+
+        if notice_element:
+            notice = re.sub(r"^[\n][ \t]+|[\n][ \t]+$", "", notice_element)
+        else:
+            notice = ""
+
+        date = re.findall(r"(\d\d\.\d\d\.\d\d\d\d)", html.html)[0]
+
+        return {"notice": notice, "date": date}
+
+    def requires_auth(self) -> any:
+        @wraps(self)
         def decorated(*args, **kwargs):
             if not args[0].authenticated:
                 args[0].logger.error("A2: Not authenticated.")
                 return
-            return f(*args, **kwargs)
+            return self(*args, **kwargs)
         return decorated
-        
+
     def close(self) -> None:
-        """Closes the client; you need to do this.
-        """
+        """Close the client; you need to do this."""
         self.parser.close()
         self.authenticated = False
-        
+
     def get_schools(self):
-        """
-        Returns all schools with their id, name and city.
-        
+        """Return all schools with their id, name and city.
+
         Returns
         -------
         list[dict[str, str]]
             JSON
         """
-        
         if os.path.exists("schools.json"):
             with open("schools.json", "r") as file:
                 return json.load(file)
-            
+
         url = "https://startcache.schulportal.hessen.de/exporteur.php"
-            
+
         response = self.parser.get(url, params=httpx.QueryParams({"a": "schoollist"})).json()
-        
+
         schools = []
 
         for group in response:
             for school in group["Schulen"]:
                 schools.append(school)
-                
+
         if self.save is True:
             with open("schools.json", "w") as file:
                     json.dump(schools, file)
-                
+
         return schools
 
     def authenticate(self) -> None:
-        """Logs into the school portal and sets the session id in the auth_cookies.
-        """
-        
+        """Log into the school portal and sets the session id in the auth_cookies."""
         if self.authenticated:
             self.logger.warning("A1: Already authenticated.")
             return
-        
+
         school_id: int
-        
+
         if isinstance(self.school, str):
             school_id = self.school
         else:
             schools = self.get_schools()
-            
+
             try:
                 school_id = next(school for school in schools if school["Name"] == self.school.name and school["Ort"] == self.school.city)["Id"]
             except StopIteration:
@@ -290,13 +304,13 @@ class LanisClient:
         response_session = get_session(school_id, self.username,
                                        self.password,self.parser, self.ad_header)
         response_cookies = response_session["cookies"]
-    
+
         if not response_session["location"]:
             self.logger.error("A3: Could not log in, possibly wrong credentials.")
             return
-    
+
         auth_url = get_authentication_url(response_cookies, self.parser, self.ad_header)
-        
+
         self.parser.cookies = get_authentication_data(auth_url, response_cookies,
                                                       self.parser, self.ad_header,
                                                       schoolid=school_id)
@@ -305,29 +319,9 @@ class LanisClient:
 
         self.logger.info("A0: Successfully authenticated.")
 
-    def __get_substitution_info__(self) -> dict[str, str]:
-        url = "https://start.schulportal.hessen.de/vertretungsplan.php"
-        page = self.parser.get(url)
-        html = HTMLParser(page.text)
-        
-        notice_element = html.css_first(
-            ".infos > tbody:nth-child(1) > tr:nth-child(2) > td:nth-child(1)"
-            )
-        
-        if notice_element:
-            notice = re.sub(r"^[\n][ \t]+|[\n][ \t]+$", "", notice_element)
-        else:
-            notice = ""
-        
-        date = re.findall("(\d\d\.\d\d\.\d\d\d\d)", html.html)[0]
-
-        return {"notice": notice, "date": date}
-    
     @requires_auth
     def logout(self) -> None:
-        """Logs out.
-        """
-        
+        """Log out."""
         url = "https://start.schulportal.hessen.de/index.php?logout=all"
         self.parser.get(url)
         self.authenticated = False
@@ -335,26 +329,24 @@ class LanisClient:
 
     @requires_auth
     def get_substitution_plan(self) -> SubstitutionPlan:
-        """
-        Returns the whole substitution plan of the current day.
+        """Return the whole substitution plan of the current day.
 
         Returns
         -------
         SubstitutionPlan
         """
-        
         url = "https://start.schulportal.hessen.de/vertretungsplan.php"
-        info = self.__get_substitution_info__()
+        info = self._get_substitution_info()
         data = {"ganzerPlan": "true", "tag": info["date"]}
 
         substitution_raw_data = self.parser.post(url, data=data)
 
         plan = self.SubstitutionPlan(
-            datetime.strptime(info["date"], '%d.%m.%Y').date(), [])
-        
+            datetime.strptime(info["date"], "%d.%m.%Y").date(), [])
+
         if info["notice"]:
             plan.info = info["notice"]
-        
+
         for data in substitution_raw_data.json():
             substitution_data = self.SubstitutionPlan.SubstitutionData(
                 substitute=data["Vertreter"],
@@ -365,39 +357,35 @@ class LanisClient:
                 room=data["Raum"],
                 notice=data["Hinweis"] if data["Hinweis"] else None,
             )
-            
+
             plan.data.append(substitution_data)
 
         self.logger.info("B0: Successfully got substitution plan")
 
         return plan
-    
+
     @requires_auth
     def get_calendar_of_month(self) -> Calendar:
-        """
-        Uses the get_calendar() function but only returns all events
-        of the current month.
+        """Use the get_calendar() function but only returns all events of the current month.
 
         Returns
         -------
         Calendar
             Calendar type with CalendarData
         """
-        
         today = date.today()
 
-        _, last_day = calendar.monthrange(int(today.strftime('%Y')),
-                                          int(today.strftime('%-m')))
+        _, last_day = calendar.monthrange(int(today.strftime("%Y")),
+                                          int(today.strftime("%-m")))
         last_date = today.replace(day=last_day)
         first_date = today.replace(day=1)
 
         return self.get_calendar(first_date, last_date)
-    
+
     @requires_auth
     def get_calendar(self, start: datetime,
                     end: datetime, json: bool = False) -> Calendar:
-        """
-        Returns all calendar events between the start and end date.
+        """Return all calendar events between the start and end date.
 
         Parameters
         ----------
@@ -414,20 +402,19 @@ class LanisClient:
         Calendar
             Calendar type with CalendarData or Json.
         """
-        
         url = "https://start.schulportal.hessen.de/kalender.php"
-        data = {"f": "getEvents", "start": start.strftime('%Y-%m-%d'),
-                "end": end.strftime('%Y-%m-%d')}
+        data = {"f": "getEvents", "start": start.strftime("%Y-%m-%d"),
+                "end": end.strftime("%Y-%m-%d")}
 
         calendar_raw_data = self.parser.post(url, data=data)
-        
+
         if json:
             calendar = self.Calendar(start, end, json=[])
             for data in calendar_raw_data.json():
                 calendar.json.append(data)
-            
+
             self.logger.info("C1: Successfully got calendar in JSON format")
-            
+
             return calendar
 
         calendar = self.Calendar(start, end, data=[])
@@ -436,8 +423,8 @@ class LanisClient:
                 title=data["title"],
                 description=data["description"],
                 place=data["Ort"],
-                start=datetime.strptime(data["Anfang"], '%Y-%m-%d %H:%M:%S'),
-                end=datetime.strptime(data["Ende"], '%Y-%m-%d %H:%M:%S'),
+                start=datetime.strptime(data["Anfang"], "%Y-%m-%d %H:%M:%S"),
+                end=datetime.strptime(data["Ende"], "%Y-%m-%d %H:%M:%S"),
                 whole_day=data["allDay"],
             )
             calendar.data.append(calendar_data)
@@ -445,17 +432,15 @@ class LanisClient:
         self.logger.info("C0: Successfully got calendar")
 
         return calendar
-    
+
     @requires_auth
     def get_tasks(self) -> list[TaskData]:
-        """
-        Returns all tasks from the "Mein Unterricht" page in .zip format.
+        """Return all tasks from the "Mein Unterricht" page in .zip format.
 
         Returns
         -------
         list[TaskData]
         """
-        
         url = "https://start.schulportal.hessen.de/meinunterricht.php"
 
         response = self.parser.get(url)
@@ -472,19 +457,19 @@ class LanisClient:
                 "td:nth-child(2) > small:nth-child(2) > span:nth-child(1)")
             date_element = first_date_element.text() if first_date_element else element.css_first(
                 "td:nth-child(2) > small:nth-child(3) > span:nth-child(1)").text()
-            date = datetime.strptime(date_element, '%d.%m.%Y')
+            date = datetime.strptime(date_element, "%d.%m.%Y")
 
             description_element = element.css_first(
                 "td:nth-child(2) > div:nth-child(4) > div:nth-child(4)")
             description = description_element.text() if description_element else None
-            
+
             details_element = element.css_first("span.markup")
             details = details_element.text() if details_element else None
 
             subject_name = element.css_first(
                 "td:nth-child(1) > h3:nth-child(1) > a:nth-child(1) > span:nth-child(2)"
                 ).text()
-            
+
             teacher = element.css_first(
                 "td:nth-child(1) > span:nth-child(2) >"
                 "div:nth-child(1) > button:nth-child(1)").attributes["title"]
@@ -503,7 +488,7 @@ class LanisClient:
                     .css_first("a")
                     .attributes["href"])
 
-                for i in range(0, len(first_attachment_elements) - 2):
+                for i in range(len(first_attachment_elements) - 2):
                     attachments.append(first_attachment_elements[i]
                                        .css_first("a")
                                        .attributes["data-file"])
@@ -517,11 +502,11 @@ class LanisClient:
                     .css_first("a")
                     .attributes["href"])
 
-                for i in range(0, len(second_attachment_elements) - 2):
+                for i in range(len(second_attachment_elements) - 2):
                     attachments.append(second_attachment_elements[i]
                                        .css_first("a")
                                        .attributes["data-file"])
-            
+
             task_data = self.TaskData(
                 title=title,
                 date=date,
@@ -532,10 +517,37 @@ class LanisClient:
                 attachment=attachments if attachments else None,
                 attachment_url=attachments_url if attachments_url else None,
             )
-                
+
             task_list.append(task_data)
-                
-                    
+
+
         self.logger.info("D0: Successfully got tasks")
 
         return task_list
+
+    def get_conversations_encrypted_data_test(self):
+        cryptor = Cryptor(self.parser)
+
+        secret = cryptor.generate_key()
+
+        challenge = cryptor.handshake(cryptor.encrypt_key(secret, cryptor.get_public_key()))
+
+        if cryptor.challenge(challenge, secret):
+            print("bobr")
+
+        url = "https://start.schulportal.hessen.de/nachrichten.php"
+
+        response = self.parser.post(url,
+                                    data={"a": "headers", "getType": "visibleOnly", "last": "0"},
+                                    headers={
+                                        "Sec-Fetch-Dest": "empty",
+                                        "Sec-Fetch-Mode": "cors",
+                                        "Sec-Fetch-Site": "same-origin",
+                                        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+                                        "X-Requested-With": "XMLHttpRequest",
+                                        },)
+
+        big_data = response.json()["rows"]
+
+        with open("encrpyted.json", "w") as file:
+            file.write(cryptor.decrypt(big_data, secret))
