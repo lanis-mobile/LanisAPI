@@ -528,12 +528,11 @@ class LanisClient:
     def get_conversations_encrypted_data_test(self):
         cryptor = Cryptor(self.parser)
 
-        secret = cryptor.generate_key()
-
-        challenge = cryptor.handshake(cryptor.encrypt_key(secret, cryptor.get_public_key()))
-
-        if cryptor.challenge(challenge, secret):
+        if cryptor.authenticate():
             print("bobr")
+        else:
+            print("not bobr")
+            return
 
         url = "https://start.schulportal.hessen.de/nachrichten.php"
 
@@ -550,4 +549,4 @@ class LanisClient:
         big_data = response.json()["rows"]
 
         with open("encrpyted.json", "w") as file:
-            file.write(cryptor.decrypt(big_data, secret))
+            file.write(cryptor.decrypt(big_data))
