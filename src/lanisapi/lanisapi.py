@@ -4,7 +4,7 @@ import logging
 import os.path
 import re
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, datetime
 from functools import wraps
 from typing import Optional
 from urllib.parse import ParseResult, urlparse
@@ -13,7 +13,7 @@ import httpx
 from selectolax.parser import HTMLParser
 
 from .helpers.authentication import (
-    get_authentication_data,
+    get_authentication_sid,
     get_authentication_url,
     get_session,
 )
@@ -189,6 +189,19 @@ class LanisClient:
         attachment: Optional[list[str]] = None
         attachment_url: Optional[ParseResult] = None
 
+    @dataclass
+    class ConversationData:
+        id: str
+        title: str
+        teacher: str
+        creation_date: datetime
+        newest_date: datetime
+        unread: bool
+        special_receivers: list[str]
+        receivers: list[str]
+        content: str
+        comments = None
+
     def __init__(self,
                  school: str | School,
                  username: str,
@@ -206,13 +219,16 @@ class LanisClient:
         self.ad_header = ad_header if ad_header is not None else httpx.Headers({ "user-agent":
                         "LanisClient by kurwjan and contributors (https://github.com/kurwjan/LanisAPI/)" })
 
-        self.parser = httpx.Client(headers=ad_header)
+        self.client = httpx.Client(headers=ad_header, timeout=httpx.Timeout(30.0, connect=60.0))
 
         self.authenticated = False
+
         self.logger = logging.getLogger("LanisClient")
 
         logging.basicConfig(
             level=logging.INFO, format="%(levelname)s - %(name)s   %(message)s")
+
+        self.cryptor = Cryptor(self.client, self.logger)
 
         self.logger.warning(
             "IMPORTANT: Schulportal Hessen can change things quickly"
@@ -220,11 +236,19 @@ class LanisClient:
             "so expect something to not be working")
 
     def __del__(self) -> None:
-        self.parser.close()
+        """If the script closes close the parser."""
+        self.client.close()
 
     def _get_substitution_info(self) -> dict[str, str]:
+        """Return the notice (if available) and date of the substitution plan.
+
+        Returns
+        -------
+        dict[str, str]
+            The data
+        """
         url = "https://start.schulportal.hessen.de/vertretungsplan.php"
-        page = self.parser.get(url)
+        page = self.client.get(url)
         html = HTMLParser(page.text)
 
         notice_element = html.css_first(
@@ -232,29 +256,34 @@ class LanisClient:
             )
 
         if notice_element:
-            notice = re.sub(r"^[\n][ \t]+|[\n][ \t]+$", "", notice_element)
+            # Remove whitespace at the beginning and end.
+            notice = re.sub(r"^[\n][ \t]+|[\n][ \t]+$", "", notice_element.text())
         else:
             notice = ""
 
         date = re.findall(r"(\d\d\.\d\d\.\d\d\d\d)", html.html)[0]
 
+        self.logger.info(f"Substitution info: Successfully got info. Notice is {bool(notice)}.")
+
         return {"notice": notice, "date": date}
 
-    def requires_auth(self) -> any:
-        @wraps(self)
-        def decorated(*args, **kwargs):
+    def requires_auth(function) -> any:
+        """Check if the client is authenticated and returns the function if true."""
+        @wraps(function)
+        def check_authenticated(*args: tuple, **kwargs: dict[str, any]) -> any:
             if not args[0].authenticated:
-                args[0].logger.error("A2: Not authenticated.")
-                return
-            return self(*args, **kwargs)
-        return decorated
+                args[0].logger.error("Not authenticated.")
+                return None
+            return function(*args, **kwargs)
+        return check_authenticated
 
     def close(self) -> None:
         """Close the client; you need to do this."""
-        self.parser.close()
+        self.client.close()
         self.authenticated = False
+        self.logger.info("Closed current session.")
 
-    def get_schools(self):
+    def get_schools(self) -> list[dict[str, str]]:
         """Return all schools with their id, name and city.
 
         Returns
@@ -262,16 +291,19 @@ class LanisClient:
         list[dict[str, str]]
             JSON
         """
+        # If schools.json was already created, just read it.
         if os.path.exists("schools.json"):
             with open("schools.json", "r") as file:
                 return json.load(file)
 
         url = "https://startcache.schulportal.hessen.de/exporteur.php"
 
-        response = self.parser.get(url, params=httpx.QueryParams({"a": "schoollist"})).json()
+        # `a`: `schoollist` = just means to get the schoollist.
+        response = self.client.get(url, params={"a": "schoollist"}).json()
 
         schools = []
 
+        # We don't want the categories only the schools.
         for group in response:
             for school in group["Schulen"]:
                 schools.append(school)
@@ -280,16 +312,24 @@ class LanisClient:
             with open("schools.json", "w") as file:
                     json.dump(schools, file)
 
+        self.logger.info("Get schools: Successfully got schools.")
+
         return schools
 
     def authenticate(self) -> None:
-        """Log into the school portal and sets the session id in the auth_cookies."""
+        """Log into the school portal and sets the session id in the auth_cookies.
+
+        Note
+        ----
+        Supports only the new system (login.schulportal.hessen.de).
+        """
         if self.authenticated:
             self.logger.warning("A1: Already authenticated.")
             return
 
         school_id: int
 
+        # Check if a id or school and place is provided.
         if isinstance(self.school, str):
             school_id = self.school
         else:
@@ -298,34 +338,50 @@ class LanisClient:
             try:
                 school_id = next(school for school in schools if school["Name"] == self.school.name and school["Ort"] == self.school.city)["Id"]
             except StopIteration:
-                self.logger.warning("E0: School doesn't exist check for right spelling.")
+                self.logger.warning("Authenticate: School doesn't exist, check for right spelling.")
                 return
 
+        # Get new session (value: SPH-Session) by posting to login page.
         response_session = get_session(school_id, self.username,
-                                       self.password,self.parser, self.ad_header)
+                                       self.password, self.client,
+                                       self.ad_header, self.logger)
         response_cookies = response_session["cookies"]
 
         if not response_session["location"]:
-            self.logger.error("A3: Could not log in, possibly wrong credentials.")
+            # It also could be other problems, Lanis can be very finicky.
+            self.logger.error("Authenticate: Could not log in, possibly wrong credentials.")
             return
 
-        auth_url = get_authentication_url(response_cookies, self.parser, self.ad_header)
+        # Get authentication url to get sid.
+        auth_url = get_authentication_url(response_cookies, self.client,
+                                          self.ad_header, self.logger)
 
-        self.parser.cookies = get_authentication_data(auth_url, response_cookies,
-                                                      self.parser, self.ad_header,
-                                                      schoolid=school_id)
+        # Get sid.
+        self.client.cookies = get_authentication_sid(auth_url, response_cookies,
+                                                      self.client, self.ad_header,
+                                                      self.logger, schoolid=school_id)
+
+        # Tell Lanis how to encrypt
+        if not self.cryptor.authenticate():
+            self.logger.error("Authenticate: Couldn't handshake with Lanis.")
+            return
 
         self.authenticated = True
 
-        self.logger.info("A0: Successfully authenticated.")
+        self.logger.info("Authenticated.")
 
     @requires_auth
     def logout(self) -> None:
-        """Log out."""
+        """Log out.
+
+        Note
+        ----
+        For closing the current LanisClient use `close()`
+        """
         url = "https://start.schulportal.hessen.de/index.php?logout=all"
-        self.parser.get(url)
+        self.client.get(url)
         self.authenticated = False
-        self.logger.info("A4: Logged out.")
+        self.logger.info("Logged out.")
 
     @requires_auth
     def get_substitution_plan(self) -> SubstitutionPlan:
@@ -337,9 +393,23 @@ class LanisClient:
         """
         url = "https://start.schulportal.hessen.de/vertretungsplan.php"
         info = self._get_substitution_info()
+
+        # Script: /module/vertretungsplan/js/my.js
+
+        # `ganzerPlan` = If you want the entire plan or only stuff for you.
+        #                Recommended is the entire plan because the creators of the
+        #                plan can mess up.
+        # `tag` = The day of the plan, often there are plans for the current and next day.
+        # `kuerzel`: `Abbreviation of substitution` = Which substitution should be shown?
+
+        ### `a` function param:
+        # `a`: `my` = Does nothing, "standard" function.
+        #      `protokoll` = Returns: {"status":-1,"statustext":"Kein Zugriff!"}, used to create substitution plans.
+
         data = {"ganzerPlan": "true", "tag": info["date"]}
 
-        substitution_raw_data = self.parser.post(url, data=data)
+        # Lanis also adds the param `a`: `my` but it does nothing.
+        substitution_raw_data = self.client.post(url, data=data)
 
         plan = self.SubstitutionPlan(
             datetime.strptime(info["date"], "%d.%m.%Y").date(), [])
@@ -347,6 +417,7 @@ class LanisClient:
         if info["notice"]:
             plan.info = info["notice"]
 
+        # Map JSON to SubstitutionData.
         for data in substitution_raw_data.json():
             substitution_data = self.SubstitutionPlan.SubstitutionData(
                 substitute=data["Vertreter"],
@@ -360,7 +431,7 @@ class LanisClient:
 
             plan.data.append(substitution_data)
 
-        self.logger.info("B0: Successfully got substitution plan")
+        self.logger.info("Get substitution plan: Success.")
 
         return plan
 
@@ -375,8 +446,10 @@ class LanisClient:
         """
         today = date.today()
 
+        # calendar.monthrange returns two days (current and last).
         _, last_day = calendar.monthrange(int(today.strftime("%Y")),
                                           int(today.strftime("%-m")))
+
         last_date = today.replace(day=last_day)
         first_date = today.replace(day=1)
 
@@ -403,20 +476,46 @@ class LanisClient:
             Calendar type with CalendarData or Json.
         """
         url = "https://start.schulportal.hessen.de/kalender.php"
+
+        # `f` Functions ### Associated script = /module/kalender/js/kalender.js
+
+        ### Getting all events.
+        # `f`: `getEvents` = We want all events in JSON format.
+        # `start` = From when do we want to start getting events, also includes events that start earlier then `start`.
+        #           Format: Year-Month-Day - 2023-10-30
+        # `end` = Like start but ending date, also includes events that end later then `end`.
+
+        #-- Unknown:
+        # `year` = ? Maybe which period?
+        # `k` = ? category ($('#kategorie').val())
+        # `s` = ? search ($('#search').val())
+        # `z` = ? zielgruppe > target group ($('#zielgruppe').val())
+        # `u` = ? $('#ansichten').data('selected')};
+
+        ### Getting single event (Unknown):
+        # `f`: `getEvent` = Get details from a single event.
+        # `id` = The id of the event.
+        # `u` = ? $('#ansichten').data('selected')};
+
+        # There are also other `f` functions.
+        # There are also `a` functions like `export` for PDFs.
+
         data = {"f": "getEvents", "start": start.strftime("%Y-%m-%d"),
                 "end": end.strftime("%Y-%m-%d")}
 
-        calendar_raw_data = self.parser.post(url, data=data)
+        calendar_raw_data = self.client.post(url, data=data)
 
+        # Just lazily return JSON.
         if json:
             calendar = self.Calendar(start, end, json=[])
             for data in calendar_raw_data.json():
                 calendar.json.append(data)
 
-            self.logger.info("C1: Successfully got calendar in JSON format")
+            self.logger.info("Get calendar: Successfully got calendar in JSON format.")
 
             return calendar
 
+        # Get JSON and map it to `CalendarData` data class.
         calendar = self.Calendar(start, end, data=[])
         for data in calendar_raw_data.json():
             calendar_data = self.Calendar.CalendarData(
@@ -429,7 +528,7 @@ class LanisClient:
             )
             calendar.data.append(calendar_data)
 
-        self.logger.info("C0: Successfully got calendar")
+        self.logger.info("Get calendar: Successfully got calendar.")
 
         return calendar
 
@@ -441,72 +540,61 @@ class LanisClient:
         -------
         list[TaskData]
         """
+        # Unfortunately there are no APIs for us.
         url = "https://start.schulportal.hessen.de/meinunterricht.php"
 
-        response = self.parser.get(url)
+        response = self.client.get(url)
 
         html = HTMLParser(response.text)
 
+        # Parse page to get all tasks.
         task_list = []
         for i in range(1, len(html.css("tr.printable")) + 1):
             element = html.css_first(f"tr.printable:nth-child({i})".format(i=i))
 
+            # Name of task.
             title = element.css_first("td:nth-child(2) > b:nth-child(1)").text()
 
+            # Date it was given.
             first_date_element = element.css_first(
                 "td:nth-child(2) > small:nth-child(2) > span:nth-child(1)")
             date_element = first_date_element.text() if first_date_element else element.css_first(
                 "td:nth-child(2) > small:nth-child(3) > span:nth-child(1)").text()
             date = datetime.strptime(date_element, "%d.%m.%Y")
 
+            # Description, sometimes there is none, so maybe there is text under the details button.
             description_element = element.css_first(
                 "td:nth-child(2) > div:nth-child(4) > div:nth-child(4)")
             description = description_element.text() if description_element else None
 
+            # Details, hidden under the the blue button with the message symbol.
             details_element = element.css_first("span.markup")
             details = details_element.text() if details_element else None
 
+            # Subject (with weird suffixes sometimes).
             subject_name = element.css_first(
                 "td:nth-child(1) > h3:nth-child(1) > a:nth-child(1) > span:nth-child(2)"
                 ).text()
 
+            # Teacher
             teacher = element.css_first(
                 "td:nth-child(1) > span:nth-child(2) >"
                 "div:nth-child(1) > button:nth-child(1)").attributes["title"]
 
+            # List of all attachment names.
             attachments = []
+            attachment_elements = element.css("td > .btn-group-vertical > .files > .dropdown-menu > li > a.file")
+            for attachment_element in attachment_elements:
+                attachments.append(attachment_element.attributes["data-file"])
 
-            first_attachment_elements = element.css(
-                "td:nth-child(3) > div:nth-child(1) >"
-                "div:nth-child(1) > ul:nth-child(2) > li")
+            # The url of a zip containing all attachments.
+            attachment_url_element = element.css("td > .btn-group-vertical > .files > .dropdown-menu > li > a")
+            try:
+                attachment_url = attachment_url_element[len(attachment_url_element)].attributes["href"]
+            except IndexError:
+                attachment_url = None
 
-            attachments_url: ParseResult = None
-
-            if first_attachment_elements:
-                attachments_url = urlparse(
-                    first_attachment_elements[len(first_attachment_elements) - 1]
-                    .css_first("a")
-                    .attributes["href"])
-
-                for i in range(len(first_attachment_elements) - 2):
-                    attachments.append(first_attachment_elements[i]
-                                       .css_first("a")
-                                       .attributes["data-file"])
-
-            second_attachment_elements = element.css(
-                "div.files:nth-child(2) > ul:nth-child(2) > li")
-
-            if second_attachment_elements:
-                attachments_url = urlparse(
-                    second_attachment_elements[len(second_attachment_elements) - 1]
-                    .css_first("a")
-                    .attributes["href"])
-
-                for i in range(len(second_attachment_elements) - 2):
-                    attachments.append(second_attachment_elements[i]
-                                       .css_first("a")
-                                       .attributes["data-file"])
-
+            # Map everything together to `TaskData`.
             task_data = self.TaskData(
                 title=title,
                 date=date,
@@ -515,18 +603,19 @@ class LanisClient:
                 description=description if description else None,
                 details=details if details else None,
                 attachment=attachments if attachments else None,
-                attachment_url=attachments_url if attachments_url else None,
+                attachment_url=attachment_url if attachment_url else None,
             )
 
             task_list.append(task_data)
 
 
-        self.logger.info("D0: Successfully got tasks")
+        self.logger.info("Get tasks: Successfully got tasks.")
 
         return task_list
 
+    ### TEST # TEST # TEST # TEST ###
     def get_conversations_encrypted_data_test(self):
-        cryptor = Cryptor(self.parser)
+        cryptor = Cryptor(self.client, self.logger)
 
         if cryptor.authenticate():
             print("bobr")
@@ -536,17 +625,147 @@ class LanisClient:
 
         url = "https://start.schulportal.hessen.de/nachrichten.php"
 
-        response = self.parser.post(url,
+        # script: /module/nachrichten/js/start.js
+        response = self.client.post(url,
                                     data={"a": "headers", "getType": "visibleOnly", "last": "0"},
-                                    headers={
-                                        "Sec-Fetch-Dest": "empty",
-                                        "Sec-Fetch-Mode": "cors",
-                                        "Sec-Fetch-Site": "same-origin",
-                                        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-                                        "X-Requested-With": "XMLHttpRequest",
-                                        },)
+                                    headers={"X-Requested-With": "XMLHttpRequest"},
+                                    )
 
         big_data = response.json()["rows"]
 
         with open("encrpyted.json", "w") as file:
             file.write(cryptor.decrypt(big_data))
+
+    ### TEST # TEST # TEST # TEST ###
+    def get_single_conversation_test(self):
+        cryptor = Cryptor(self.client, self.logger)
+
+        cryptor.authenticate()
+
+        url = "https://start.schulportal.hessen.de/nachrichten.php"
+
+        id = "a4c62f2f39b528a3bed37ac8895da3a3-16929c0a-6ce0-476a-8d76-8aa57ca7060a"
+
+        response = self.client.post(url,
+                                    data={"a": "read", "uniqid": cryptor.encrypt(id)},
+                                    params={"a": "read", "msg": id},
+                                    headers={"X-Requested-With": "XMLHttpRequest"},
+                                    )
+
+        data = response.json()
+
+        print(cryptor.decrypt(data["message"]))
+
+    def _get_single_conversation(self, id: str) -> dict[str, any]:
+        """Get creation date and content of the conversation.
+
+        Parameters
+        ----------
+        id : str
+            The `Uniquid`. Cool typo.
+
+        Returns
+        -------
+        dict[str, any]
+            The data.
+
+        Todo
+        ----
+        Get comments.
+        """
+        url = "https://start.schulportal.hessen.de/nachrichten.php"
+
+        single_message_response = self.client.post(url,
+                                data={"a": "read", "uniqid": self.cryptor.encrypt(id)},
+                                params={"a": "read", "msg": id},
+                                headers={"X-Requested-With": "XMLHttpRequest"},
+                                )
+
+        single_message = json.loads(self.cryptor.decrypt(single_message_response.json()["message"]))
+
+        creation_date = datetime.strptime(single_message["Datum"], "%d.%m.%Y %H:%M")
+
+        content = HTMLParser(single_message["Inhalt"]).text()
+
+        self.logger.info("Get single conversation: Success.")
+
+        return {"creation_date": creation_date, "content": content}
+
+    def get_conversations(self, number: int = 5) -> list[ConversationData]:
+        """Return conversations from the "Nachrichten - Beta-Version".
+
+        Parameters
+        ----------
+        number : int, optional
+            The number of conversations to return, by default 5. To get all conversations use -1 but this will take a while and spam Lanis servers.
+
+        Returns
+        -------
+        list[ConversationData]
+            The conversations in ConversationData.
+        """
+        url = "https://start.schulportal.hessen.de/nachrichten.php"
+
+        response = self.client.post(url,
+                            data={"a": "headers", "getType": "visibleOnly", "last": "0"},
+                            headers={"X-Requested-With": "XMLHttpRequest"},
+                            )
+
+        parsed_response: dict[str, any] = response.json()
+
+        parsed_conversations: list[dict[str, any]] = json.loads(self.cryptor.decrypt(parsed_response["rows"]))
+
+        conversations_list: list[self.ConversationData] = []
+
+        if number == -1:
+            number = parsed_response["total"]
+
+        for i in range(number):
+
+            parsed_conversation = parsed_conversations[i]
+
+            # Get full teacher name
+            parsed_teacher = HTMLParser(parsed_conversation["SenderName"]).text()
+
+            teacher = None
+
+            # Sometimes there is just " , " for some reason so we need to get rid of it.
+            if parsed_teacher != " , ":
+                teacher = HTMLParser(parsed_conversation["SenderName"]).text().strip()
+
+            # Get special receivers
+            special_receivers = None
+            try:
+                if parsed_conversation["WeitereEmpfaenger"]:
+                    special_receivers = HTMLParser(parsed_conversation["WeitereEmpfaenger"]).text().strip().split("   ")
+            except (IndexError, KeyError):
+                # Just skip if none are found.
+                pass
+
+            # Get all receivers
+            receivers = []
+
+            for receiver in parsed_conversation["empf"]:
+                parsed_receiver = HTMLParser(receiver).text().strip()
+
+                # Sometimes receivers are empty so we need to skip them.
+                if parsed_receiver:
+                    receivers.append(parsed_receiver)
+
+            single_message_data = self._get_single_conversation(parsed_conversation["Uniquid"])
+
+            conversation = self.ConversationData(
+                id=parsed_conversation["Uniquid"],
+                title=parsed_conversation["Betreff"],
+                teacher=teacher,
+                creation_date=single_message_data["creation_date"],
+                newest_date=datetime.strptime(parsed_conversation["Datum"], "%d.%m.%Y %H:%M"),
+                unread=bool(parsed_conversation["unread"]),
+                special_receivers=special_receivers,
+                receivers=receivers,
+                content=single_message_data["content"],
+            )
+
+            conversations_list.append(conversation)
+
+        return conversations_list
