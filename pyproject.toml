@@ -40,7 +40,7 @@ dependencies = [
 # Unlike Flake8, Ruff doesn't enable pycodestyle warnings (`W`) or
 # McCabe complexity (`C901`) by default.
 select = ["F","E","W","C901","I","N","D","DTZ","RET","SIM","RSE","Q","ICN","EM","PIE","LOG","ANN","B"]
-ignore = ["DTZ007","DTZ011","ANN101"]
+ignore = ["DTZ007","DTZ011","ANN101","D416","D404"]
 
 # Allow fix for all enabled rules (when `--fix`) is provided.
 fixable = ["ALL"]
@@ -78,5 +78,5 @@ line-length = 88
 # Allow unused variables when underscore-prefixed.
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
-# Assume Python 3.8
+# Assume Python 3.11
 target-version = "py311"

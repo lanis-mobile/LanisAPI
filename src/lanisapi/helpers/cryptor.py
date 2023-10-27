@@ -1,8 +1,12 @@
+"""This script has the Cryptor class for decrypting the messages."""
+
 import base64
+import logging
 import re
 import time
 from functools import wraps
 from hashlib import md5
+from json.decoder import JSONDecodeError
 from random import randint, random, seed
 
 import httpx
@@ -27,12 +31,13 @@ class Cryptor:
     https://github.com/koenidv/sph-planner/blob/main/app/src/main/java/de/koenidv/sph/networking/Cryption.kt
     """
 
-    def __init__(self, client: httpx.Client) -> None:
+    def __init__(self, client: httpx.Client, logger: logging.Logger) -> None:
         self.client: httpx.Client = client
         self.secret: str
         self.authenticated = False
+        self.logger = logger
 
-    def _bytes_to_key(self, data: bytes, salt: bytes, output=48) -> bytes:
+    def _bytes_to_key(self, data: bytes, salt: bytes, output: int = 48) -> bytes:
         """Transform bytes to keys.
 
         Parameters
@@ -67,14 +72,14 @@ class Cryptor:
         """Pad plain data.
 
         Parameters
-        ----------
+        ----------response.json()["publickey"]
         data : bytes
             The plain data.
 
         Returns
         -------
         bytes
-            The Padded plain data.
+            The padded plain data.
 
         Note
         ----
@@ -134,7 +139,9 @@ class Cryptor:
 
         key = re.sub(pattern=r"[xy]",string=pattern,repl=self._random_letter)
 
-        return self._encrypt(key, key)
+        self.logger.info(f"Cryptor - Generate key: Generated key {key[:8]}-....-4...-....-............-......3...")
+
+        return self.encrypt(key, key)
 
     def _handshake(self, encrypted_key: str) -> str:
         """Tell Lanis how to encrypt data.
@@ -152,14 +159,23 @@ class Cryptor:
         """
         url = "https://start.schulportal.hessen.de/ajax.php?f=rsaHandshake&s=665"
 
-        response = self.client.post(url,
-                                    params=
-                                    {"f": "rsaHandshake",
-                                     "s": str(randint(0,2000))},
-                                    data={"key": encrypted_key}
-                                    )
+        try:
+            response = self.client.post(url,
+                                        params=
+                                        {"f": "rsaHandshake",
+                                         "s": str(randint(0,2000))},
+                                        data={"key": encrypted_key}
+                                        )
+        except httpx.RequestError as error:
+            self.logger.error(f"Cryptor - Handshake: An error occured while posting to {error.request.url} - {error}")
 
-        return str(response.json()["challenge"])
+        try:
+            challenge = str(response.json()["challenge"])
+        except JSONDecodeError as error:
+            # Occurs if challenge is not in JSON, often that means its just blank.
+            self.logger.error(f"Cryptor - Handshake: An error occured while decoding the json {response.content} - {error}")
+
+        return challenge
 
     def _challenge(self, challenge: str) -> bool:
         """Check if Lanis and LanisAPI are encrypting equally.
@@ -172,9 +188,14 @@ class Cryptor:
         Returns
         -------
         bool
-            If False it failed, if True it isn't False.
+            If `False` it failed, if `True` it isn't `False`.
         """
-        return self.decrypt(challenge) == self.secret
+
+        _challenge = self.decrypt(challenge) == self.secret
+
+        self.logger.info(f"Cryptor - Challenge: Result is {_challenge}")
+
+        return _challenge
 
     def _get_public_key(self) -> str:
         """Get Schulportal Hessens public rsa key.
@@ -186,9 +207,18 @@ class Cryptor:
         """
         url = "https://start.schulportal.hessen.de/ajax.php?f=rsaPublicKey"
 
-        response = self.client.get(url)
+        try:
+            response = self.client.get(url)
+        except httpx.RequestError as error:
+            self.logger.error(f"Cryptor - Public key: An error occured while getting the public key from {error.request.url} - {error}")
 
-        return response.json()["publickey"]
+        try:
+            public_key = response.json()["publickey"]
+        except JSONDecodeError as error:
+            # Occurs if public_key is not in JSON, often that means its just blank.
+            self.logger.error(f"Cryptor - Public key: An error occured while decoding the json {response.content} - {error}")
+
+        return public_key
 
     def _encrypt_key(self, public_key: str) -> str:
         """Encrypts the secret with the public key.
@@ -205,9 +235,22 @@ class Cryptor:
         """
         rsa = PKCS1_v1_5.new(RSA.import_key(public_key))
 
-        return base64.b64encode(rsa.encrypt(self.secret.encode())).decode()
+        encrypted = base64.b64encode(rsa.encrypt(self.secret.encode())).decode()
 
-    def _encrypt(self, plain: str, secret: str = None) -> str:
+        self.logger.info(f"Cryptor - Encrypt key: Encrypted key {encrypted[:8]}......")
+
+        return encrypted
+
+    def requires_auth(function) -> any:
+        @wraps(function)
+        def check_authenticated(*args: tuple, **kwargs: dict[str, any]) -> any:
+            if not args[0].authenticated:
+                function.logger.warning("Cryptor: You need to first run Cryptor.authenticate() to use this function.")
+                return None
+            return function(*args, **kwargs)
+        return check_authenticated
+
+    def encrypt(self, plain: str, secret: str = None) -> str:
         """Encrypts a given text with CBC.
 
         Parameters
@@ -233,15 +276,11 @@ class Cryptor:
         key = key_iv[:32]
         iv = key_iv[32:]
         aes = AES.new(key, AES.MODE_CBC, iv)
-        return base64.b64encode(b"Salted__" + salt + aes.encrypt(self._pad(plain))).decode()
+        encrypted = base64.b64encode(b"Salted__" + salt + aes.encrypt(self._pad(plain))).decode()
 
-    def requires_auth(self) -> any:
-        @wraps(self)
-        def decorated(*args, **kwargs):
-            if not args[0].authenticated:
-                return
-            return self(*args, **kwargs)
-        return decorated
+        self.logger.info(f"Cryptor - Encrypt: Encrypted text {encrypted[:8]}....")
+
+        return encrypted
 
     @requires_auth
     def decrypt(self, encrypted: str) -> str:
@@ -264,7 +303,12 @@ class Cryptor:
         key = key_iv[:32]
         iv = key_iv[32:]
         aes = AES.new(key, AES.MODE_CBC, iv)
-        return self._unpad(aes.decrypt(encrypted[16:]))
+
+        decrypted = self._unpad(aes.decrypt(encrypted[16:]))
+
+        self.logger.info("Cryptor - Decrypt: Decrypted data.")
+
+        return decrypted
 
     def authenticate(self) -> bool:
         """Authenticate with a generated key so Lanis knows how to encrypt data.
@@ -283,8 +327,11 @@ class Cryptor:
         self.authenticated = True
 
         if self._challenge(challenge):
+            self.logger.info("Cryptor - Authenticate: Successfully authenticated.")
             return True
 
         self.authenticated = False
+
+        self.logger.warning("Cryptor - Authenticate: Couldn't authenticate.")
 
         return False
