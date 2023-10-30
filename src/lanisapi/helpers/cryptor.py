@@ -1,10 +1,8 @@
 """This script has the Cryptor class for decrypting the messages."""
 
 import base64
-import logging
 import re
 import time
-from functools import wraps
 from hashlib import md5
 from json.decoder import JSONDecodeError
 from random import randint, random, seed
@@ -13,6 +11,10 @@ import httpx
 from Cryptodome import Random
 from Cryptodome.Cipher import AES, PKCS1_v1_5
 from Cryptodome.PublicKey import RSA
+
+from ..constants import LOGGER, URL
+from .request import Request
+from .wrappers import requires_auth
 
 
 class Cryptor:
@@ -31,11 +33,9 @@ class Cryptor:
     https://github.com/koenidv/sph-planner/blob/main/app/src/main/java/de/koenidv/sph/networking/Cryption.kt
     """
 
-    def __init__(self, client: httpx.Client, logger: logging.Logger) -> None:
-        self.client: httpx.Client = client
+    def __init__(self) -> None:
         self.secret: str
         self.authenticated = False
-        self.logger = logger
 
     def _bytes_to_key(self, data: bytes, salt: bytes, output: int = 48) -> bytes:
         """Transform bytes to keys.
@@ -139,7 +139,7 @@ class Cryptor:
 
         key = re.sub(pattern=r"[xy]",string=pattern,repl=self._random_letter)
 
-        self.logger.info(f"Cryptor - Generate key: Generated key {key[:8]}-....-4...-....-............-......3...")
+        LOGGER.info(f"Cryptor - Generate key: Generated key {key[:8]}-....-4...-....-............-......3...")
 
         return self.encrypt(key, key)
 
@@ -157,23 +157,18 @@ class Cryptor:
             Encrypted secret with our secret.
             It's used to check if both parties are encrypting equally.
         """
-        url = "https://start.schulportal.hessen.de/ajax.php?f=rsaHandshake&s=665"
-
-        try:
-            response = self.client.post(url,
-                                        params=
-                                        {"f": "rsaHandshake",
-                                         "s": str(randint(0,2000))},
-                                        data={"key": encrypted_key}
-                                        )
-        except httpx.RequestError as error:
-            self.logger.error(f"Cryptor - Handshake: An error occured while posting to {error.request.url} - {error}")
+        response = Request.post(URL.encryption,
+                                    params=
+                                    {"f": "rsaHandshake",
+                                        "s": str(randint(0,2000))},
+                                    data={"key": encrypted_key}
+                                    )
 
         try:
             challenge = str(response.json()["challenge"])
         except JSONDecodeError as error:
             # Occurs if challenge is not in JSON, often that means its just blank.
-            self.logger.error(f"Cryptor - Handshake: An error occured while decoding the json {response.content} - {error}")
+            LOGGER.error(f"Cryptor - Handshake: An error occured while decoding the json {response.content} - {error}")
 
         return challenge
 
@@ -190,10 +185,9 @@ class Cryptor:
         bool
             If `False` it failed, if `True` it isn't `False`.
         """
-
         _challenge = self.decrypt(challenge) == self.secret
 
-        self.logger.info(f"Cryptor - Challenge: Result is {_challenge}")
+        LOGGER.info(f"Cryptor - Challenge: Result is {_challenge}")
 
         return _challenge
 
@@ -205,18 +199,16 @@ class Cryptor:
         str
             The rsa key.
         """
-        url = "https://start.schulportal.hessen.de/ajax.php?f=rsaPublicKey"
-
         try:
-            response = self.client.get(url)
+            response = Request.get(URL.encryption, params={"f": "rsaPublicKey"})
         except httpx.RequestError as error:
-            self.logger.error(f"Cryptor - Public key: An error occured while getting the public key from {error.request.url} - {error}")
+            LOGGER.error(f"Cryptor - Public key: An error occured while getting the public key from {error.request.url} - {error}")
 
         try:
             public_key = response.json()["publickey"]
         except JSONDecodeError as error:
             # Occurs if public_key is not in JSON, often that means its just blank.
-            self.logger.error(f"Cryptor - Public key: An error occured while decoding the json {response.content} - {error}")
+            LOGGER.error(f"Cryptor - Public key: An error occured while decoding the json {response.content} - {error}")
 
         return public_key
 
@@ -237,21 +229,12 @@ class Cryptor:
 
         encrypted = base64.b64encode(rsa.encrypt(self.secret.encode())).decode()
 
-        self.logger.info(f"Cryptor - Encrypt key: Encrypted key {encrypted[:8]}......")
+        LOGGER.info(f"Cryptor - Encrypt key: Encrypted key {encrypted[:8]}......")
 
         return encrypted
 
-    def requires_auth(function) -> any:
-        @wraps(function)
-        def check_authenticated(*args: tuple, **kwargs: dict[str, any]) -> any:
-            if not args[0].authenticated:
-                function.logger.warning("Cryptor: You need to first run Cryptor.authenticate() to use this function.")
-                return None
-            return function(*args, **kwargs)
-        return check_authenticated
-
     def encrypt(self, plain: str, secret: str = None) -> str:
-        """Encrypts a given text with CBC.
+        """Encrypts a given text with AES in CBC mode.
 
         Parameters
         ----------
@@ -269,6 +252,10 @@ class Cryptor:
         ----
         CBC encryption isn't the best there are better solutions.
         """
+        if secret is None and self.authenticated is False:
+            LOGGER.error("Cryptor - encrypt: Not authenticated.")
+            return None
+
         plain = plain.encode()
         salt = Random.new().read(8)
         secret = secret.encode() if secret else self.secret.encode()
@@ -278,7 +265,7 @@ class Cryptor:
         aes = AES.new(key, AES.MODE_CBC, iv)
         encrypted = base64.b64encode(b"Salted__" + salt + aes.encrypt(self._pad(plain))).decode()
 
-        self.logger.info(f"Cryptor - Encrypt: Encrypted text {encrypted[:8]}....")
+        LOGGER.info(f"Cryptor - Encrypt: Encrypted text {encrypted[:8]}....")
 
         return encrypted
 
@@ -306,7 +293,7 @@ class Cryptor:
 
         decrypted = self._unpad(aes.decrypt(encrypted[16:]))
 
-        self.logger.info("Cryptor - Decrypt: Decrypted data.")
+        LOGGER.info("Cryptor - Decrypt: Decrypted data.")
 
         return decrypted
 
@@ -327,11 +314,11 @@ class Cryptor:
         self.authenticated = True
 
         if self._challenge(challenge):
-            self.logger.info("Cryptor - Authenticate: Successfully authenticated.")
+            LOGGER.info("Cryptor - Authenticate: Successfully authenticated.")
             return True
 
         self.authenticated = False
 
-        self.logger.warning("Cryptor - Authenticate: Couldn't authenticate.")
+        LOGGER.warning("Cryptor - Authenticate: Couldn't authenticate.")
 
         return False

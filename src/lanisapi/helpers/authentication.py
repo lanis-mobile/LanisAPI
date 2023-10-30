@@ -1,15 +1,13 @@
 """This script has functions to log into Lanis."""
-import logging
-
 import httpx
+
+from ..constants import LOGGER
+from .request import Request
 
 
 def get_session(schoolid: str,
                 username: str,
                 password: str,
-                parser: httpx.Client,
-                ad_header: httpx.Headers,
-                logger: logging.Logger
                 ) -> dict[str, any]:
     """Create new session (value: SPH-Session) at Lanis by posting to the login page.
 
@@ -32,7 +30,7 @@ def get_session(schoolid: str,
         "password": password,
         }
 
-    response = parser.post(url, headers=ad_header, data=data, params=params)
+    response = Request.post(url, data=data, params=params)
 
     cookies = httpx.Cookies()
     cookies.set(
@@ -47,36 +45,28 @@ def get_session(schoolid: str,
 
     data = {"cookies": cookies, "location": location}
 
-    logger.info("Authentication - Get session: Successfully created session.")
+    LOGGER.info("Authentication - Get session: Successfully created session.")
 
     return data
 
-def get_authentication_url(
-    cookies: httpx.Cookies,
-    parser: httpx.Client,
-    ad_header: httpx.Headers,
-    logger: logging.Logger
-    ) -> str:
+def get_authentication_url(cookies: httpx.Cookies) -> str:
     """Get the authentication url to get sid."""
     url = "https://connect.schulportal.hessen.de/"
-    response = parser.get(url, cookies=cookies, headers=ad_header)
+    response = Request.get(url, cookies=cookies)
 
     # Link to the next (and final) page.
     authentication_url = response.headers.get("location")
 
-    logger.info("Authentication - Get url: Successfully got url.")
+    LOGGER.info("Authentication - Get url: Successfully got url.")
 
     return authentication_url
 
 def get_authentication_sid(url: str,
                             cookies: httpx.Cookies,
-                            parser: httpx.Client,
-                            ad_header: httpx.Headers,
-                            logger: logging.Logger,
                             schoolid: str,
                             ) -> httpx.Cookies:
     """Get sid and return the 'final' cookies."""
-    response = parser.get(url, cookies=cookies, headers=ad_header)
+    response = Request.get(url, cookies=cookies)
 
     cookies = httpx.Cookies()
 
@@ -88,6 +78,6 @@ def get_authentication_sid(url: str,
                 .split(", ")[1]
                 .split("=")[1])
 
-    logger.info("Authentication - Get sid: Success.")
+    LOGGER.info("Authentication - Get sid: Success.")
 
     return cookies
