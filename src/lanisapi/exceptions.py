@@ -4,4 +4,4 @@ class PageNotFoundError(Exception):
     """Returned if Lanis couldn't find the page (404)."""
 
 class NotAuthenticatedError(Exception):
-    """Returned if LanisClient or Cryptor wasn't authenticated yet."""
+    """Returned if `LanisClient` or `Cryptor` wasn't authenticated yet."""
