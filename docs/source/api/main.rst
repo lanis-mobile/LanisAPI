@@ -1,9 +1,9 @@
-.. title:: API References
+.. title:: Main reference
 
-.. _api:
+.. _main:
 
-API References
-==============
+Main reference
+=====================
 
 LanisClient
 -----------

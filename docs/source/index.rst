@@ -3,11 +3,11 @@
 .. toctree::
     :hidden:
     :titlesonly:
-    :maxdepth: 1
+    :maxdepth: 2
     
     first_steps
     repo
-    api
+    api/index
 
 LanisAPI
 ========
