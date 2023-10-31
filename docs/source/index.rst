@@ -12,6 +12,9 @@
 LanisAPI
 ========
 
+.. attention:: 
+    This project is still in a early stage so expect bugs.
+
 .. warning:: 
     Because the Schulportal Hessen changes quickly and is very fragmented, some functions at specific schools or after a while may no longer work.
 
@@ -26,9 +29,11 @@ LanisAPi is an unofficial Python library for the Schulportal Hessen also availab
 Features
 --------
 
-* Fetching homework
-* Fetching substitution plan
-* Fetching calendar data
+* Fetch homework or other tasks.
+* Fetch substitution plan.
+* Fetch calendar events.
+* Fetch conversations.
+* Fetch all schools that have Lanis.
 
 Overview of future features, problems and other things `here <https://github.com/users/kurwjan/projects/2>`__.
 
@@ -36,10 +41,11 @@ Example
 -------
 .. code-block:: python
 
-    from lanisapi import LanisClient
+    from lanisapi import LanisClient, School
 
     def main():
         client = LanisClient("schoolid", "name.lastname", "password")
+            or: client = LanisClient(School("school", "city"), "password")
         client.authenticate()
         print(client.get_substitution_plan())
         client.close()
@@ -54,6 +60,8 @@ How can I help?
 1. You can report problems `here <https://github.com/kurwjan/LanisAPI/issues>`__.
 2. You can suggest ideas `here <https://github.com/kurwjan/LanisAPI/issues>`__.
 3. **Contributing:** You can contribute to this project either by code or improving the wiki. If you're new to contributing, look `here <https://docs.github.com/en/get-started/quickstart/contributing-to-projects>`__.
+
+*Also if you like this project you can give it a star on Github.*
 
 Credits
 -------

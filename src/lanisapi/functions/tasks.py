@@ -32,7 +32,7 @@ class Task:
         ``details`` is the blue button with a comment symbol that sometimes appears.
     attachment : list[str], optional
         List of the attachments names.
-    attachment_url : urllib.parse.ParseResult, optional
+    attachment_url : str, optional
         Download link to a zip file containing all attachments.
     """
 

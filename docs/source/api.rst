@@ -22,38 +22,43 @@ General functions
 .. autofunction:: close
 
 Get all schools
-~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~
 
 Functions
 ^^^^^^^^^
 
+.. currentmodule:: lanisapi.LanisClient
 .. autofunction:: get_schools
 
 Types
 ^^^^^
 
+.. currentmodule:: lanisapi.functions.schools
 .. autoclass:: School
 
-Substitution plan
-~~~~~~~~~~~~~~~~~
+Getting the Substitution plan
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Functions
 ^^^^^^^^^
 
+.. currentmodule:: lanisapi.LanisClient
 .. autofunction:: get_substitution_plan
 
 Types
 ^^^^^
 
+.. currentmodule:: lanisapi.functions.substitution
 .. autoclass:: SubstitutionPlan
     :members:
 
-Calendar
-~~~~~~~~~~~~~~~~~
+Getting the Calendar
+~~~~~~~~~~~~~~~~~~~~
 
 Functions
 ^^^^^^^^^
 
+.. currentmodule:: lanisapi.LanisClient
 .. autofunction:: get_calendar
 
 .. autofunction:: get_calendar_of_month
@@ -61,18 +66,36 @@ Functions
 Types
 ^^^^^
 
+.. currentmodule:: lanisapi.functions.calendar
 .. autoclass:: Calendar
     :members:
 
-Tasks
+Getting all tasks
 ~~~~~~~~~~~~~~~~~
 
 Functions
 ^^^^^^^^^
 
+.. currentmodule:: lanisapi.LanisClient
 .. autofunction:: get_tasks
 
 Types
 ^^^^^
 
-.. autoclass:: TaskData
+.. currentmodule:: lanisapi.functions.tasks
+.. autoclass:: Task
+
+Getting conversations
+~~~~~~~~~~~~~~~~~~~~~
+
+Functions
+^^^^^^^^^
+
+.. currentmodule:: lanisapi.LanisClient
+.. autofunction:: get_conversations
+
+Types
+^^^^^
+
+.. currentmodule:: lanisapi.functions.conversations
+.. autoclass:: Conversation

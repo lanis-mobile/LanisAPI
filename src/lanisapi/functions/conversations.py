@@ -28,10 +28,10 @@ class Conversation:
     newest_date : str
         When the newest comment was created.
     unread : bool
-        If the user already marked it as 'read'.
+        If the user already marked it as `read`.
     special_receivers : list[str]
         Often these are groups of specific people,
-        like 'Alle SuS' or special People, like 'Admin'.
+        like `Alle SuS` or special People, like `Admin`.
     receivers : list[str]
         People with their full name and sometimes class.
     content : str
