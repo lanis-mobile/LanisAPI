@@ -11,9 +11,11 @@ Eine inoffizielle Python-Bibliothek für das Schulportal Hessen. Auch auf [PyPi]
 
 ## Features
 
-+ Hausaufgaben bekommen
-+ Vertretungsplan bekommen
-+ Kalenderdaten bekommen
++ Hausaufgaben oder andere Aufgaben bekommen.
++ Vertretungsplan bekommen.
++ Kalenderereignisse bekommen.
++ Unterhaltungen bekommen.
++ Alle Schulen die Lanis haben bekommen.
 
 **Übersicht von zukünftigen Features, Probleme und anderes [hier](https://github.com/users/kurwjan/projects/2)**
 
@@ -34,6 +36,7 @@ from lanisapi import LanisClient
 
 def main():
     client = LanisClient("schulid", "name.nachname", "passwort")
+        or: client = LanisClient(School("school", "city"), "password")
     client.authenticate()
     print(client.get_substitution_plan())
     client.close()
@@ -52,7 +55,7 @@ Mehr Infos bei der [Wiki](https://lanisapi.readthedocs.io/en/latest/first_steps.
 
 *Übrigens, wenn dir dieses Projekt gefällt, kannst du es auch einen Stern geben.*
 
-## Credits
+## Creditss
 
 Das Javascript-Projekt [SPHclient](https://github.com/alessioC42/SPHclient) von [@alessioC42](https://github.com/alessioC42) hat mir geholfen um das *Schulportal Hessen* zu verstehen.
 

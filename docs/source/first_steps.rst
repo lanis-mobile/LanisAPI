@@ -36,11 +36,11 @@ Example code
 
 .. code-block:: python
 
-    from lanisapi import LanisClient
+    from lanisapi import LanisClient, School
 
     def main():
         client = LanisClient("schoolid", "name.lastname", "password")
-            or: client = LanisClient(LanisClient.School("Testschule MH", "Testhausen City"), "password")
+            or: client = LanisClient(School("Testschule MH", "Testhausen City"), "password")
         client.authenticate()
         print(client.get_substitution_plan())
         client.close()
