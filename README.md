@@ -11,9 +11,11 @@ It's an unofficial Python library for the Schulportal Hessen. Also available on 
 
 ## Features
 
-+ Fetch homework
-+ Fetch substitution plan
-+ Fetch calendar data
++ Fetch homework or other tasks.
++ Fetch substitution plan.
++ Fetch calendar events.
++ Fetch conversations.
++ Fetch all schools that have Lanis.
 
 **Overview of future Features, Problems and other things [here](https://github.com/users/kurwjan/projects/2).**
 
@@ -30,10 +32,11 @@ Required is Python 3.11. *(older versions should definitely work too but I didn'
 This example gives the substitution plan.
 
 ```python
-from lanisapi import LanisClient
+from lanisapi import LanisClient, School
 
 def main():
     client = LanisClient("schoolid", "name.lastname", "password")
+        or: client = LanisClient(School("school", "city"), "password")
     client.authenticate()
     print(client.get_substitution_plan())
     client.close()
