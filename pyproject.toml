@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "lanisapi"
-version = "0.1.1"
+version = "0.2.0"
 authors = [
     { name = "kurwjan" }
 ]
@@ -27,9 +27,56 @@ classifiers = [
 dependencies = [
     "httpx",
     "selectolax",
+    "pycryptodomex",
 ]
 
 [project.urls]
 "Homepage" = "https://github.com/kurwjan/LanisAPI"
 "Bug Tracker" = "https://github.com/kurwjan/LanisAPI/issues"
 "Documentation" = "https://lanisapi.readthedocs.io/"
+
+[tool.ruff]
+# Enable Pyflakes (`F`) and a subset of the pycodestyle (`E`)  codes by default.
+# Unlike Flake8, Ruff doesn't enable pycodestyle warnings (`W`) or
+# McCabe complexity (`C901`) by default.
+select = ["F","E","W","C901","I","N","D","DTZ","RET","SIM","RSE","Q","ICN","EM","PIE","LOG","ANN","B"]
+ignore = ["DTZ007","DTZ011","ANN101","D416","D404","F405"]
+
+# Allow fix for all enabled rules (when `--fix`) is provided.
+fixable = ["ALL"]
+unfixable = []
+
+# Exclude a variety of commonly ignored directories.
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "venv",
+]
+per-file-ignores = {}
+
+# Same as Black.
+line-length = 88
+
+# Allow unused variables when underscore-prefixed.
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+# Assume Python 3.11
+target-version = "py311"
