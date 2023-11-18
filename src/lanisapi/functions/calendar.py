@@ -1,4 +1,4 @@
-"""This script includes classes and functions about the 'Kalendar' page."""
+"""This script includes classes and functions about the 'Kalender' page."""
 
 import calendar
 from dataclasses import dataclass
@@ -56,6 +56,7 @@ class Calendar:
     end: datetime
     events: list[Event] | list[dict[str, any]] = None
 
+
 def _get_calendar_month(json: bool = False) -> Calendar:
     """Use the _get_calendar() function but only returns all events of the current month.
 
@@ -67,13 +68,15 @@ def _get_calendar_month(json: bool = False) -> Calendar:
     today = datetime.today()
 
     # calendar.monthrange returns two days (current and last).
-    _, last_day = calendar.monthrange(int(today.strftime("%Y")),
-                                        int(today.strftime("%-m")))
+    _, last_day = calendar.monthrange(
+        int(today.strftime("%Y")), int(today.strftime("%-m"))
+    )
 
     last_date = today.replace(day=last_day)
     first_date = today.replace(day=1)
 
     return _get_calendar(first_date, last_date, json=json)
+
 
 def _get_calendar(start: datetime, end: datetime, json: bool = False) -> Calendar:
     """Return all calendar events between the start and end date.
@@ -101,7 +104,7 @@ def _get_calendar(start: datetime, end: datetime, json: bool = False) -> Calenda
     #           Format: Year-Month-Day - 2023-10-30
     # `end` = Like start but ending date, also includes events that end later then `end`.
 
-    #-- Unknown:
+    # -- Unknown:
     # `year` = ? Maybe which period?
     # `k` = ? category ($('#kategorie').val())
     # `s` = ? search ($('#search').val())
@@ -116,8 +119,11 @@ def _get_calendar(start: datetime, end: datetime, json: bool = False) -> Calenda
     # There are also other `f` functions.
     # There are also `a` functions like `export` for PDFs.
 
-    data = {"f": "getEvents", "start": start.strftime("%Y-%m-%d"),
-            "end": end.strftime("%Y-%m-%d")}
+    data = {
+        "f": "getEvents",
+        "start": start.strftime("%Y-%m-%d"),
+        "end": end.strftime("%Y-%m-%d"),
+    }
 
     calendar_raw_data = Request.post(URL.calendar, data=data)
 

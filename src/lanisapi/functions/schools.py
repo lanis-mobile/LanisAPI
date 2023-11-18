@@ -2,26 +2,10 @@
 
 import json
 import os
-from dataclasses import dataclass
 
 from ..constants import LOGGER, URL
 from ..helpers.request import Request
 
-
-@dataclass
-class School:
-    """Alternative to school id for authentication.
-
-    Parameters
-    ----------
-    name : str
-        Full school name
-    city : str
-        City name sometimes with abbreviations or fully written.
-    """
-
-    name: str
-    city: str
 
 def _get_schools(save: bool) -> list[dict[str, str]]:
     """Return all schools with their id, name and city.
@@ -53,7 +37,7 @@ def _get_schools(save: bool) -> list[dict[str, str]]:
 
     if save is True:
         with open("schools.json", "w") as file:
-                json.dump(schools, file)
+            json.dump(schools, file)
 
     LOGGER.info("Get schools: Successfully got schools.")
 

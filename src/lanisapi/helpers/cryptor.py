@@ -30,10 +30,11 @@ class Cryptor:
     This class wouldn't exist without these scripts:
 
     https://stackoverflow.com/questions/36762098/how-to-decrypt-password-from-javascript-cryptojs-aes-encryptpassword-passphras
+
     https://github.com/koenidv/sph-planner/blob/main/app/src/main/java/de/koenidv/sph/networking/Cryption.kt
     """
 
-    def __init__(self) -> None:
+    def __init__(self) -> None:  # noqa: D107
         self.secret: str
         self.authenticated = False
 
@@ -72,7 +73,7 @@ class Cryptor:
         """Pad plain data.
 
         Parameters
-        ----------response.json()["publickey"]
+        ----------
         data : bytes
             The plain data.
 
@@ -85,8 +86,8 @@ class Cryptor:
         ----
         I don't know what this does but it does work.
         """
-        length = 16 - (len(data) % 16) # Block size = 16
-        return data + (chr(length)*length).encode()
+        length = 16 - (len(data) % 16)  # Block size = 16
+        return data + (chr(length) * length).encode()
 
     def _unpad(self, data: bytes) -> str:
         """Unpad decrypted data.
@@ -105,7 +106,9 @@ class Cryptor:
         ----
         I don't know what this does but it does work.
         """
-        return data[:-(data[-1] if isinstance(data[-1], int) else ord(data[-1]))].decode()
+        return data[
+            : -(data[-1] if isinstance(data[-1], int) else ord(data[-1]))
+        ].decode()
 
     def _random_letter(self, letter: str) -> str:
         """Return a pseudo-random letter.
@@ -137,9 +140,11 @@ class Cryptor:
         """
         pattern = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx-xxxxxx3xx"
 
-        key = re.sub(pattern=r"[xy]",string=pattern,repl=self._random_letter)
+        key = re.sub(pattern=r"[xy]", string=pattern, repl=self._random_letter)
 
-        LOGGER.info(f"Cryptor - Generate key: Generated key {key[:8]}-....-4...-....-............-......3...")
+        LOGGER.info(
+            f"Cryptor - Generate key: Generated key {key[:8]}-....-4...-....-............-......3..."
+        )
 
         return self.encrypt(key, key)
 
@@ -157,18 +162,19 @@ class Cryptor:
             Encrypted secret with our secret.
             It's used to check if both parties are encrypting equally.
         """
-        response = Request.post(URL.encryption,
-                                    params=
-                                    {"f": "rsaHandshake",
-                                        "s": str(randint(0,2000))},
-                                    data={"key": encrypted_key}
-                                    )
+        response = Request.post(
+            URL.encryption,
+            params={"f": "rsaHandshake", "s": str(randint(0, 2000))},
+            data={"key": encrypted_key},
+        )
 
         try:
             challenge = str(response.json()["challenge"])
         except JSONDecodeError as error:
             # Occurs if challenge is not in JSON, often that means its just blank.
-            LOGGER.error(f"Cryptor - Handshake: An error occured while decoding the json {response.content} - {error}")
+            LOGGER.error(
+                f"Cryptor - Handshake: An error occurred while decoding the json {response.content} - {error}"
+            )
 
         return challenge
 
@@ -202,13 +208,17 @@ class Cryptor:
         try:
             response = Request.get(URL.encryption, params={"f": "rsaPublicKey"})
         except httpx.RequestError as error:
-            LOGGER.error(f"Cryptor - Public key: An error occured while getting the public key from {error.request.url} - {error}")
+            LOGGER.error(
+                f"Cryptor - Public key: An error occurred while getting the public key from {error.request.url} - {error}"
+            )
 
         try:
             public_key = response.json()["publickey"]
         except JSONDecodeError as error:
             # Occurs if public_key is not in JSON, often that means its just blank.
-            LOGGER.error(f"Cryptor - Public key: An error occured while decoding the json {response.content} - {error}")
+            LOGGER.error(
+                f"Cryptor - Public key: An error occurred while decoding the json {response.content} - {error}"
+            )
 
         return public_key
 
@@ -259,11 +269,13 @@ class Cryptor:
         plain = plain.encode()
         salt = Random.new().read(8)
         secret = secret.encode() if secret else self.secret.encode()
-        key_iv = self._bytes_to_key(secret, salt, 32+16)
+        key_iv = self._bytes_to_key(secret, salt, 32 + 16)
         key = key_iv[:32]
         iv = key_iv[32:]
         aes = AES.new(key, AES.MODE_CBC, iv)
-        encrypted = base64.b64encode(b"Salted__" + salt + aes.encrypt(self._pad(plain))).decode()
+        encrypted = base64.b64encode(
+            b"Salted__" + salt + aes.encrypt(self._pad(plain))
+        ).decode()
 
         LOGGER.info(f"Cryptor - Encrypt: Encrypted text {encrypted[:8]}....")
 
@@ -286,7 +298,7 @@ class Cryptor:
         encrypted = base64.b64decode(encrypted.encode())
         assert encrypted[0:8] == b"Salted__"
         salt = encrypted[8:16]
-        key_iv = self._bytes_to_key(self.secret.encode(), salt, 32+16)
+        key_iv = self._bytes_to_key(self.secret.encode(), salt, 32 + 16)
         key = key_iv[:32]
         iv = key_iv[32:]
         aes = AES.new(key, AES.MODE_CBC, iv)
