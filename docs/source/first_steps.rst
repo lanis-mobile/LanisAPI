@@ -36,11 +36,12 @@ Example code
 
 .. code-block:: python
 
-    from lanisapi import LanisClient, School
+    from lanisapi import LanisClient, LanisAccount, LanisCookie, School
 
     def main():
-        client = LanisClient("schoolid", "name.lastname", "password")
-            or: client = LanisClient(School("Testschule MH", "Testhausen City"), "password")
+        client = LanisClient(LanisAccount("school id", "name.lastname", "password"))
+            or: client = LanisClient(LanisAccount(School("school", "city"), "name.lastname", "password"))
+            or: client = LanisClient(LanisCookie("school id", "session id")) # Use client.authentication_cookies in the previous session
         client.authenticate()
         print(client.get_substitution_plan())
         client.close()
@@ -48,8 +49,9 @@ Example code
     if __name__ == "__main__":
         main()
 
-1. First you initialise the ``LanisClient`` class with the ``schoolid`` you can find it in the url at ``?=i`` in https://start.schulportal.hessen.de/?i=SCHOOLID.
+1. First you initialise the ``LanisClient`` class with the LanisAccount dataclass. You can find the school id in the url at ``?=i`` in https://start.schulportal.hessen.de/?i=SCHOOLID.
 2. Or you initalise it with School(``school``, ``city``).
-3. Then you log in with ``authenticate()``.
-4. Then we print the current substitution plan.
-5. Then we close the client. **You need to do this.**
+3. Or if you already initialised before you can use the previous session and provide ``LanisCookie`` with ``LanisClient.authentication_cookies``.
+4. Then you log in with ``authenticate()``.
+5. Then we print the current substitution plan.
+6. Then we close the client. **You need to do this.**

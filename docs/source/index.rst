@@ -34,6 +34,7 @@ Features
 * Fetch calendar events.
 * Fetch conversations.
 * Fetch all schools that have Lanis.
+* Fetch all web applets with their links.
 
 Overview of future features, problems and other things `here <https://github.com/users/kurwjan/projects/2>`__.
 
@@ -41,11 +42,12 @@ Example
 -------
 .. code-block:: python
 
-    from lanisapi import LanisClient, School
+    from lanisapi import LanisClient, LanisAccount, LanisCookie, School
 
     def main():
-        client = LanisClient("schoolid", "name.lastname", "password")
-            or: client = LanisClient(School("school", "city"), "password")
+        client = LanisClient(LanisAccount("school id", "name.lastname", "password"))
+            or: client = LanisClient(LanisAccount(School("school", "city"), "name.lastname", "password"))
+            or: client = LanisClient(LanisCookie("school id", "session id"))
         client.authenticate()
         print(client.get_substitution_plan())
         client.close()

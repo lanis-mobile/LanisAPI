@@ -16,6 +16,7 @@ It's an unofficial Python library for the Schulportal Hessen. Also available on 
 + Fetch calendar events.
 + Fetch conversations.
 + Fetch all schools that have Lanis.
++ Fetch all web applets with their links.
 
 **Overview of future Features, Problems and other things [here](https://github.com/users/kurwjan/projects/2).**
 
@@ -25,18 +26,19 @@ It's an unofficial Python library for the Schulportal Hessen. Also available on 
 pip install lanisapi
 ```
 
-Required is Python 3.11. *(older versions should definitely work too but I didn't tested it.)*
+Required is Python 3.11. *(older versions are probably not working, I didn't tested it.)*
 
 ## Example
 
 This example gives the substitution plan.
 
 ```python
-from lanisapi import LanisClient, School
+from lanisapi import LanisClient, LanisAccount, LanisCookies, School
 
 def main():
-    client = LanisClient("schoolid", "name.lastname", "password")
-        or: client = LanisClient(School("school", "city"), "password")
+    client = LanisClient(LanisAccount("school id", "name.lastname", "password"))
+        or: client = LanisClient(LanisAccount(School("school", "city"), "name.lastname", "password"))
+        or: client = LanisClient(LanisCookie("school id", "session id"))
     client.authenticate()
     print(client.get_substitution_plan())
     client.close()

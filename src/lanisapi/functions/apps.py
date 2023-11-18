@@ -38,7 +38,7 @@ def _get_apps() -> list[App]:
     Returns
     -------
     list[App]
-        A list of `App`.
+        A list of ``App``.
     """
     apps: list[App] = []
 

@@ -48,6 +48,10 @@ class LanisCookie:
         The id of the school.
     session_id : str
         The id or how Lanis calls it `sid` of a session.
+
+    Note
+    ----
+    Use ``LanisClient.authentication_cookies`` from a previous session to get ``LanisCookie`` for the next session.
     """
 
     school_id: str
