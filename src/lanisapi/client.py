@@ -5,9 +5,11 @@ from datetime import datetime
 import httpx
 
 from .constants import LOGGER, URL
+from .functions.apps import App, _get_apps, _get_available_apps
+from .functions.authentication_types import LanisAccount, LanisCookie
 from .functions.calendar import Calendar, _get_calendar, _get_calendar_month
 from .functions.conversations import Conversation, _get_conversations
-from .functions.schools import School, _get_schools
+from .functions.schools import _get_schools
 from .functions.substitution import SubstitutionPlan, _get_substitutions
 from .functions.tasks import Task, _get_tasks
 from .helpers.authentication import (
@@ -16,8 +18,9 @@ from .helpers.authentication import (
     get_session,
 )
 from .helpers.cryptor import Cryptor
+from .helpers.html_logger import HTMLLogger
 from .helpers.request import Request
-from .helpers.wrappers import handle_exceptions, requires_auth
+from .helpers.wrappers import check_availability, handle_exceptions, requires_auth
 
 
 class LanisClient:
@@ -27,36 +30,35 @@ class LanisClient:
 
     Parameters
     ----------
-    school : str | School
-        1. The id of the school which you can see it in the url at ``i=``.
-        2. The school name and city in ``School``.
-    username : str
-        The username in firstname.lastname.
-    password : str
-        The password.
+    authentication : LanisAccount | LanisCookie
+        1. A Lanis account with its username and password, and a school id or school name and city in ``School``.
+        2. Cookies with authentication data (school id and session id) in ``LanisCookie`` for instantly interacting with Lanis. You can obtain this during a session with ``authentication_cookies``.
     save : bool, default True
-        If False the school list and future things won't be saved to a file.
+        If False the school list, html data logs and future things won't be saved to a file.
     ad_header : httpx.Headers, default {"user-agent": ....}
         Send custom headers to Lanis. Primarily used to send a
         custom ``user-agent``.
     """
 
-    def __init__(self,
-                 school: str | School,
-                 username: str,
-                 password: str,
-                 save: bool = True,
-                 ad_header: httpx.Headers = None,
-                 ) -> None:
-
-        self.school = school
-        self.username = username
-        self.password = password
+    def __init__(  # noqa: D107
+        self,
+        authentication: LanisAccount | LanisCookie,
+        save: bool = True,
+        ad_header: httpx.Headers = None,
+    ) -> None:
+        self.authentication = authentication
 
         self.save = save
 
-        self.ad_header = ad_header if ad_header is not None else httpx.Headers({ "user-agent":
-                        "LanisClient by kurwjan and contributors (https://github.com/kurwjan/LanisAPI/)" })
+        self.ad_header = (
+            ad_header
+            if ad_header is not None
+            else httpx.Headers(
+                {
+                    "user-agent": "LanisClient by kurwjan and contributors (https://github.com/kurwjan/LanisAPI/)"
+                }
+            )
+        )
 
         self.authenticated = False
 
@@ -64,13 +66,17 @@ class LanisClient:
 
         self.cryptor = Cryptor()
 
-        LOGGER.warning(
-            "LANISAPI IS STILL IN A EARLY STAGE SO EXPECT BUGS.")
+        LOGGER.info("USING VERSION 0.3.0")
+
+        LOGGER.warning("LANISAPI IS STILL IN A EARLY STAGE SO EXPECT BUGS.")
 
         LOGGER.warning(
-            "IMPORTANT: Schulportal Hessen can change things quickly"
-            "and is fragmented (some schools work, some not),"
-            "so expect something to not be working")
+            "IMPORTANT: Schulportal Hessen can change things quickly "
+            "and is fragmented (some schools work, some not), "
+            "so expect something to not be working"
+        )
+
+        HTMLLogger.setup(self.save)
 
     def __del__(self) -> None:
         """If the script closes close the parser."""
@@ -81,6 +87,12 @@ class LanisClient:
         Request.close()
         self.authenticated = False
         LOGGER.info("Closed current session.")
+
+    @property
+    def authentication_cookies(self) -> LanisCookie:
+        """Return ``LanisCookie`` with the authentication data (school id and session id) if authenticated. You can use this to authenticate with Lanis instantly."""
+        cookies = Request.get_cookies()
+        return LanisCookie(cookies.get("i", domain=""), cookies.get("sid"))
 
     @handle_exceptions
     def get_schools(self) -> list[dict[str, str]]:
@@ -103,37 +115,61 @@ class LanisClient:
         More at https://support.schulportal.hessen.de/knowledgebase.php?article=1087.
         """
         if self.authenticated:
-            LOGGER.warning("A1: Already authenticated.")
+            LOGGER.warning("Authenticate: Already authenticated.")
             return
 
         school_id: int
 
-        # Check if a id or school and place is provided.
-        if isinstance(self.school, str):
-            school_id = self.school
+        if isinstance(self.authentication, LanisCookie):
+            Request.set_cookies(
+                {
+                    "i": self.authentication.school_id,
+                    "sid": self.authentication.session_id,
+                }
+            )
+            LOGGER.info(
+                "Authenticate: Using cookies to authenticate, skip authentication."
+            )
         else:
-            schools = self.get_schools()
+            # Check if a id or school and place is provided.
+            if isinstance(self.authentication.school, str):
+                school_id = self.authentication.school
+            else:
+                schools = self.get_schools()
 
-            try:
-                school_id = next(school for school in schools if school["Name"] == self.school.name and school["Ort"] == self.school.city)["Id"]
-            except StopIteration:
-                LOGGER.warning("Authenticate: School doesn't exist, check for right spelling.")
+                try:
+                    school_id = next(
+                        school
+                        for school in schools
+                        if school["Name"] == self.authentication.school.name
+                        and school["Ort"] == self.authentication.school.city
+                    )["Id"]
+                except StopIteration:
+                    LOGGER.warning(
+                        "Authenticate: School doesn't exist, check for right spelling."
+                    )
+                    return
+
+            # Get new session (value: SPH-Session) by posting to login page.
+            response_session = get_session(
+                school_id, self.authentication.username, self.authentication.password
+            )
+            response_cookies = response_session["cookies"]
+
+            if not response_session["location"]:
+                # It also could be other problems, Lanis can be very finicky.
+                LOGGER.error(
+                    "Authenticate: Could not log in, possibly wrong credentials."
+                )
                 return
 
-        # Get new session (value: SPH-Session) by posting to login page.
-        response_session = get_session(school_id, self.username, self.password)
-        response_cookies = response_session["cookies"]
+            # Get authentication url to get sid.
+            auth_url = get_authentication_url(response_cookies)
 
-        if not response_session["location"]:
-            # It also could be other problems, Lanis can be very finicky.
-            LOGGER.error("Authenticate: Could not log in, possibly wrong credentials.")
-            return
-
-        # Get authentication url to get sid.
-        auth_url = get_authentication_url(response_cookies)
-
-        # Get sid.
-        Request.set_cookies(get_authentication_sid(auth_url, response_cookies, schoolid=school_id))
+            # Get sid.
+            Request.set_cookies(
+                get_authentication_sid(auth_url, response_cookies, schoolid=school_id)
+            )
 
         # Tell Lanis how to encrypt
         if not self.cryptor.authenticate():
@@ -141,6 +177,16 @@ class LanisClient:
             return
 
         self.authenticated = True
+
+        available_apps = _get_available_apps()
+
+        LOGGER.info(
+            "Available apps:\n"
+            f"  Calendar: {'Kalender' in available_apps}\n"
+            + f"  Tasks: {'mein Unterricht' in available_apps}\n"
+            + f"  Conversations: {'Nachrichten - Beta-Version' in available_apps}\n"
+            + f"  Substitution plan: {'Vertretungsplan' in available_apps}"
+        )
 
         LOGGER.info("Authenticated.")
 
@@ -153,11 +199,12 @@ class LanisClient:
         ----
         For closing the current LanisClient use `close()`
         """
-        Request.post(URL.logout)
+        Request.post(URL.index, data={"logout": "all"})
         self.authenticated = False
         LOGGER.info("Logged out.")
 
     @requires_auth
+    @check_availability("Vertretungsplan")
     @handle_exceptions
     def get_substitution_plan(self) -> SubstitutionPlan:
         """Return the whole substitution plan of the current day.
@@ -181,9 +228,11 @@ class LanisClient:
         return _get_calendar_month()
 
     @requires_auth
+    @check_availability("Kalender")
     @handle_exceptions
-    def get_calendar(self, start: datetime,
-                    end: datetime, json: bool = False) -> Calendar:
+    def get_calendar(
+        self, start: datetime, end: datetime, json: bool = False
+    ) -> Calendar:
         """Return all calendar events between the start and end date.
 
         Parameters
@@ -204,9 +253,10 @@ class LanisClient:
         return _get_calendar(start, end, json)
 
     @requires_auth
+    @check_availability("mein Unterricht")
     @handle_exceptions
     def get_tasks(self) -> list[Task]:
-        """Return all tasks from the "Mein Unterricht" page in .zip format.
+        """Return all tasks from the "Mein Unterricht" page with downloads in .zip format.
 
         Returns
         -------
@@ -215,6 +265,7 @@ class LanisClient:
         return _get_tasks()
 
     @requires_auth
+    @check_availability("Nachrichten - Beta-Version")
     @handle_exceptions
     def get_conversations(self, number: int = 5) -> list[Conversation]:
         """Return conversations from the "Nachrichten - Beta-Version".
@@ -230,3 +281,27 @@ class LanisClient:
             The conversations in Conversation.
         """
         return _get_conversations(self.cryptor, number)
+
+    @requires_auth
+    @handle_exceptions
+    def get_apps(self) -> list[App]:
+        """Get all web applets from Lanis, not only supported ones.
+
+        Returns
+        -------
+        list[App]
+            A list of `App`.
+        """
+        return _get_apps()
+
+    @requires_auth
+    @handle_exceptions
+    def get_available_apps(self) -> list[str]:
+        """Get all supported web applets by this library which are also supported by the Lanis of the user.
+
+        Returns
+        -------
+        list[str]
+            A list of the supported applets.
+        """
+        return _get_available_apps()

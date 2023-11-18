@@ -16,6 +16,7 @@ Eine inoffizielle Python-Bibliothek für das Schulportal Hessen. Auch auf [PyPi]
 + Kalenderereignisse bekommen.
 + Unterhaltungen bekommen.
 + Alle Schulen die Lanis haben bekommen.
++ Alle Online-Apps mit ihren Links bekommen.
 
 **Übersicht von zukünftigen Features, Probleme und anderes [hier](https://github.com/users/kurwjan/projects/2)**
 
@@ -25,7 +26,7 @@ Eine inoffizielle Python-Bibliothek für das Schulportal Hessen. Auch auf [PyPi]
 pip install lanisapi
 ```
 
-Vorausgesetzt wird Python 3.11. *(ältere Versionen gehen bestimmt auch, habe es nicht getestet)*
+Vorausgesetzt wird Python 3.11. *(ältere Versionen gehen wahrscheinlich nicht, habe es nicht getestet)*
 
 ## Beispiel
 
@@ -35,9 +36,9 @@ Dieses Beispiel gibt dir den Vertretungsplan.
 from lanisapi import LanisClient
 
 def main():
-    client = LanisClient("schulid", "name.nachname", "passwort")
-        or: client = LanisClient(School("school", "city"), "password")
-    client.authenticate()
+    client = LanisClient(LanisAccount("school id", "name.lastname", "password"))
+        or: client = LanisClient(LanisAccount(School("school", "city"), "name.lastname", "password"))
+        or: client = LanisClient(LanisCookie("school id", "session id"))
     print(client.get_substitution_plan())
     client.close()
     
