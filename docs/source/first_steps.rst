@@ -7,7 +7,7 @@ First steps
 
 .. important:: 
     **Very important** is also that you report not working features from your school or errors.
-    This is necessary to support everyone. More info at :ref:`repo`.
+    This is necessary to support everyone. More info at :ref:`repo` and :ref:`bug_reporting`.
 
 Install
 -------

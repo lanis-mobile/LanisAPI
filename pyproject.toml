@@ -4,11 +4,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "lanisapi"
-version = "0.3.0"
+version = "0.3.1"
 authors = [
     { name = "kurwjan" }
 ]
-description = "A unofficial python api for Lanis"
+description = "A unofficial python api for Lanis."
 keywords = [
     "Lanis",
     "SPH",

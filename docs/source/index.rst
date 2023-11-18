@@ -8,6 +8,7 @@
     first_steps
     repo
     api/index
+    contributing/index
 
 LanisAPI
 ========
@@ -61,7 +62,7 @@ How can I help?
 ---------------
 1. You can report problems `here <https://github.com/kurwjan/LanisAPI/issues>`__.
 2. You can suggest ideas `here <https://github.com/kurwjan/LanisAPI/issues>`__.
-3. **Contributing:** You can contribute to this project either by code or improving the wiki. If you're new to contributing, look `here <https://docs.github.com/en/get-started/quickstart/contributing-to-projects>`__.
+3. **Contributing:** You can contribute to this project either by code or improving the wiki. If you're new to contributing, look `here <https://docs.github.com/en/get-started/quickstart/contributing-to-projects>`__ and for this project there is also some help: :ref:`programming_help`.
 
 *Also if you like this project you can give it a star on Github.*
 

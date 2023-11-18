@@ -1,6 +1,7 @@
 """This script includes functions and classes for getting Lanis applets and checking for the availability of this library supported applets."""
 
 from dataclasses import dataclass
+from difflib import SequenceMatcher
 from functools import cache
 from urllib.parse import urljoin
 
@@ -66,29 +67,35 @@ def _get_available_apps() -> list[str]:
     Returns
     -------
     list[str]
-        A list of the supported applets.
+        A list which contains some of these strings: ``Kalender``, ``Mein Unterricht``, ``Nachrichten - Beta-Version``, ``Vertretungsplan``
     """
     implemented_apps = [
         "Kalender",
-        "mein Unterricht",
-        "Nachrichten - Beta-Version",
+        "Mein Unterricht",
+        "Nachrichten - Beta-Version",  # Yeah there are probably more names for that app
         "Vertretungsplan",
     ]
     gotten_apps = _get_apps()
 
     available_apps: list[str] = []
 
+    # We use Python's SequenceMatcher to get similar applet names.
     for app in gotten_apps:
-        if app.name in implemented_apps:
-            available_apps.append(app.name)
+        for implemented in implemented_apps:
+            if (
+                SequenceMatcher(None, app.name.lower(), implemented.lower()).ratio()
+                > 0.8 # Probably need to tweak this number
+            ):
+                available_apps.append(implemented)
 
     LOGGER.info("Get apps availability: Success.")
 
     return available_apps
 
 
+@cache
 def _get_app_availability(app_name: str) -> bool:
-    """Check if app is supported by the school.
+    """Check if one of these apps: ``Kalender``, ``Mein Unterricht``, ``Nachrichten - Beta-Version``, ``Vertretungsplan`` is supported by the school.
 
     Parameters
     ----------

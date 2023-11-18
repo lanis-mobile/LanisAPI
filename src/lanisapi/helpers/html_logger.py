@@ -71,6 +71,7 @@ class HTMLLogger:
 
 {html}
 #--End--------------------------#
+
 """
 
         if not cls.save:

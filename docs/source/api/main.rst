@@ -119,6 +119,8 @@ Functions
 
 .. autofunction:: get_available_apps
 
+.. autofunction:: get_app_availability
+
 Types
 ^^^^^
 

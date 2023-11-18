@@ -9,6 +9,7 @@ from ..constants import LOGGER
 from ..exceptions import (
     AppNotAvailableError,
     CriticalElementWasNotFoundError,
+    LoginPageRedirectError,
     NotAuthenticatedError,
     PageNotFoundError,
 )
@@ -22,13 +23,18 @@ def handle_exceptions(function: FunctionType) -> FunctionType:
     def handle_exceptions_wrapper(
         *args: tuple, **kwargs: dict[str, any]
     ) -> FunctionType:
+        # Check code
         try:
             return function(*args, **kwargs)
         except httpx.RequestError as err:
             LOGGER.exception(
                 f"A {err.__class__.__name__} happened while requesting: {err}"
             )
-        except (PageNotFoundError, CriticalElementWasNotFoundError) as err:
+        except (
+            PageNotFoundError,
+            CriticalElementWasNotFoundError,
+            LoginPageRedirectError,
+        ) as err:
             raise err
 
     return handle_exceptions_wrapper
@@ -41,6 +47,7 @@ def requires_auth(function: FunctionType) -> FunctionType:
     def check_authentication_wrapper(
         *args: tuple, **kwargs: dict[str, any]
     ) -> FunctionType:
+        # Check code
         if not args[0].authenticated:
             msg = f"Exception at {function.__qualname__}: Not authenticated."
             raise NotAuthenticatedError(msg)
