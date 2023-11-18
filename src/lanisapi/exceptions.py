@@ -1,4 +1,4 @@
-"""This script has all Lanis- and lib-related Exceptions."""
+"""Here are all all Lanis- and lib-related Exceptions."""
 
 
 class PageNotFoundError(Exception):
@@ -10,7 +10,7 @@ class LoginPageRedirectError(Exception):
 
 
 class NotAuthenticatedError(Exception):
-    """Returned if `LanisClient` or `Cryptor` wasn't authenticated yet."""
+    """Returned if ``LanisClient`` or ``Cryptor`` wasn't authenticated yet."""
 
 
 class AppNotAvailableError(Exception):

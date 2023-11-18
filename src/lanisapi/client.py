@@ -31,8 +31,8 @@ class LanisClient:
     Parameters
     ----------
     authentication : LanisAccount | LanisCookie
-        1. A Lanis account with its username and password, and a school id or school name and city in `School`.
-        2. Cookies with authentication data (school id and session id) in `LanisCookie` for instantly interacting with Lanis. You can obtain this during a session with `authentication_cookies`.
+        1. A Lanis account with its username and password, and a school id or school name and city in ``School``.
+        2. Cookies with authentication data (school id and session id) in ``LanisCookie`` for instantly interacting with Lanis. You can obtain this during a session with ``authentication_cookies``.
     save : bool, default True
         If False the school list, html data logs and future things won't be saved to a file.
     ad_header : httpx.Headers, default {"user-agent": ....}
@@ -90,7 +90,7 @@ class LanisClient:
 
     @property
     def authentication_cookies(self) -> LanisCookie:
-        """Return `LanisCookie` with the authentication data (school id and session id) if authenticated. You can use this to authenticate with Lanis instantly."""
+        """Return ``LanisCookie`` with the authentication data (school id and session id) if authenticated. You can use this to authenticate with Lanis instantly."""
         cookies = Request.get_cookies()
         return LanisCookie(cookies.get("i", domain=""), cookies.get("sid"))
 
