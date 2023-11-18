@@ -5,7 +5,7 @@ from datetime import datetime
 import httpx
 
 from .constants import LOGGER, URL
-from .functions.apps import App, _get_apps, _get_available_apps
+from .functions.apps import App, _get_app_availability, _get_apps, _get_available_apps
 from .functions.authentication_types import LanisAccount, LanisCookie
 from .functions.calendar import Calendar, _get_calendar, _get_calendar_month
 from .functions.conversations import Conversation, _get_conversations
@@ -66,7 +66,7 @@ class LanisClient:
 
         self.cryptor = Cryptor()
 
-        LOGGER.info("USING VERSION 0.3.0")
+        LOGGER.info("USING VERSION 0.3.1")
 
         LOGGER.warning("LANISAPI IS STILL IN A EARLY STAGE SO EXPECT BUGS.")
 
@@ -183,7 +183,7 @@ class LanisClient:
         LOGGER.info(
             "Available apps:\n"
             f"  Calendar: {'Kalender' in available_apps}\n"
-            + f"  Tasks: {'mein Unterricht' in available_apps}\n"
+            + f"  Tasks: {'Mein Unterricht' in available_apps}\n"
             + f"  Conversations: {'Nachrichten - Beta-Version' in available_apps}\n"
             + f"  Substitution plan: {'Vertretungsplan' in available_apps}"
         )
@@ -253,7 +253,7 @@ class LanisClient:
         return _get_calendar(start, end, json)
 
     @requires_auth
-    @check_availability("mein Unterricht")
+    @check_availability("Mein Unterricht")
     @handle_exceptions
     def get_tasks(self) -> list[Task]:
         """Return all tasks from the "Mein Unterricht" page with downloads in .zip format.
@@ -305,3 +305,19 @@ class LanisClient:
             A list of the supported applets.
         """
         return _get_available_apps()
+
+    @requires_auth
+    @handle_exceptions
+    def get_app_availability(self, app_name: str) -> bool:
+        """Check if one of these apps: ``Kalender``, ``Mein Unterricht``, ``Nachrichten - Beta-Version``, ``Vertretungsplan`` is supported by the school.
+
+        Parameters
+        ----------
+        app_name : str
+            The applet name.
+
+        Returns
+        -------
+        bool
+        """
+        return _get_app_availability(app_name)

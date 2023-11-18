@@ -1,4 +1,4 @@
-"""This script includes the Request class to post and get with exception handling."""
+"""This script includes the Request class to request data with exception handling."""
 
 import httpx
 
@@ -6,7 +6,7 @@ from ..exceptions import LoginPageRedirectError, PageNotFoundError
 
 
 class Request:
-    """Post and get with a httpx client and exception handling."""
+    """Request with a httpx client and exception handling."""
 
     client: httpx.Client = httpx.Client(timeout=httpx.Timeout(30.0, connect=60.0))
 

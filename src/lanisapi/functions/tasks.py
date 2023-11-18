@@ -7,6 +7,7 @@ from urllib.parse import urljoin
 from selectolax.parser import HTMLParser
 
 from ..constants import LOGGER, URL
+from ..exceptions import CriticalElementWasNotFoundError
 from ..helpers.html_logger import HTMLLogger
 from ..helpers.request import Request
 
@@ -64,13 +65,11 @@ def _get_tasks() -> list[Task]:
     task_list = []
     for element in elements:
         if not element:
-            LOGGER.error(
-                "Get tasks: Critical task element was not found, something is definitely wrong! Please file a bug with the html_logs.txt file."
-            )
             HTMLLogger.log_missing_element(
                 html.html, "get_task()", elements.index(element), "element"
             )
-            continue
+            msg = "Critical task element was not found, something is definitely wrong! Please file a bug with the html_logs.txt file."
+            raise CriticalElementWasNotFoundError(msg)
 
         # Name of task.
         title_element = element.css_first("b.thema")

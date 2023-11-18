@@ -52,7 +52,7 @@ Mehr Infos bei der [Wiki](https://lanisapi.readthedocs.io/en/latest/first_steps.
 
 1. Du kannst bei *Issues* Probleme die du findest melden.
 2. Du kannst bei *Issues* Ideenvorschläge machen.
-3. **Beim Programmieren beitragen**: Mehr Infos [hier](https://docs.github.com/en/get-started/quickstart/contributing-to-projects), falls du neu bist.
+3. **Beim Programmieren beitragen**: Mehr Infos [hier](https://docs.github.com/en/get-started/quickstart/contributing-to-projects), falls du neu bist und es gibt auch Hilfe über dieses Projekt [hier](https://lanisapi.readthedocs.io/en/latest/contributing/programming_help.html).
 
 *Übrigens, wenn dir dieses Projekt gefällt, kannst du es auch einen Stern geben.*
 

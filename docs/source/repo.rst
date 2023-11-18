@@ -21,6 +21,8 @@ Report bugs or not working features from your school here:
 * List of existing issues: https://github.com/kurwjan/LanisAPI/issues
 * Create a new issue: https://github.com/kurwjan/LanisAPI/issues/new
 
+**More info here:** :ref:`bug_reporting`
+
 Source Tarballs
 ---------------
 
