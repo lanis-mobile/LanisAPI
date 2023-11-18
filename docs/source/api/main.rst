@@ -10,16 +10,30 @@ LanisClient
 
 .. autoclass:: lanisapi.LanisClient
 
+Properties
+~~~~~~~~~~~~~~~~~
+
+.. autoproperty:: lanisapi.LanisClient.authentication_cookies
+
 General functions
 ~~~~~~~~~~~~~~~~~
 
 .. currentmodule:: lanisapi.LanisClient
-
 .. autofunction:: authenticate
 
 .. autofunction:: logout
 
 .. autofunction:: close
+
+Authentication types
+~~~~~~~~~~~~~~~~~~~~
+
+.. currentmodule:: lanisapi.functions.authentication_types
+.. autoclass:: School
+
+.. autoclass:: LanisAccount
+
+.. autoclass:: LanisCookie
 
 Get all schools
 ~~~~~~~~~~~~~~~
@@ -29,12 +43,6 @@ Functions
 
 .. currentmodule:: lanisapi.LanisClient
 .. autofunction:: get_schools
-
-Types
-^^^^^
-
-.. currentmodule:: lanisapi.functions.schools
-.. autoclass:: School
 
 Getting the Substitution plan
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -99,3 +107,20 @@ Types
 
 .. currentmodule:: lanisapi.functions.conversations
 .. autoclass:: Conversation
+
+Getting all web applets
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Functions
+^^^^^^^^^
+
+.. currentmodule:: lanisapi.LanisClient
+.. autofunction:: get_apps
+
+.. autofunction:: get_available_apps
+
+Types
+^^^^^
+
+.. currentmodule:: lanisapi.functions.apps
+.. autoclass:: App

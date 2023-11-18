@@ -5,7 +5,5 @@
 Exceptions reference
 ====================
 
-.. currentmodule:: lanisapi.exceptions
-.. autoclass:: PageNotFoundError
-
-.. autoclass:: NotAuthenticatedError
+.. automodule:: lanisapi.exceptions
+    :members:

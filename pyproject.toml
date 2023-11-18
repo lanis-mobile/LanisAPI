@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "lanisapi"
-version = "0.2.0"
+version = "0.3.0"
 authors = [
     { name = "kurwjan" }
 ]
@@ -40,7 +40,7 @@ dependencies = [
 # Unlike Flake8, Ruff doesn't enable pycodestyle warnings (`W`) or
 # McCabe complexity (`C901`) by default.
 select = ["F","E","W","C901","I","N","D","DTZ","RET","SIM","RSE","Q","ICN","EM","PIE","LOG","ANN","B"]
-ignore = ["DTZ007","DTZ011","ANN101","D416","D404","F405"]
+ignore = ["DTZ007","DTZ011","ANN101","ANN102","D416","D404","F405"]
 
 # Allow fix for all enabled rules (when `--fix`) is provided.
 fixable = ["ALL"]
@@ -73,10 +73,13 @@ exclude = [
 per-file-ignores = {}
 
 # Same as Black.
-line-length = 88
+line-length = 300
 
 # Allow unused variables when underscore-prefixed.
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
 # Assume Python 3.11
 target-version = "py311"
+
+[tool.ruff.lint.pycodestyle]
+ignore-overlong-task-comments = true
