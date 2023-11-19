@@ -1,5 +1,6 @@
 """This script includes functions and classes for getting Lanis applets and checking for the availability of this library supported applets."""
 
+import re
 from dataclasses import dataclass
 from difflib import SequenceMatcher
 from functools import cache
@@ -7,6 +8,25 @@ from urllib.parse import urljoin
 
 from ..constants import LOGGER, URL
 from ..helpers.request import Request
+
+
+@dataclass
+class Folder:
+    """A Lanis web folder.
+
+    Parameters
+    ----------
+    name : str
+        The name.
+    symbol : str
+        A symbol which represents this applet. Lanis uses Font Awesome and Glyphicons for this.
+    colour : str
+        The colour of these small top bars which you can see on Lanis.
+    """
+
+    name: str
+    symbol: str
+    colour: str
 
 
 @dataclass
@@ -19,17 +39,51 @@ class App:
         The name.
     colour : str
         The colour which you can see on Lanis.
-    group : str
+    folder : list of Folder
         The groups, category, folder or how you want to call it of the app.
         You can see it on the index page of Lanis.
     link : str
         The full Lanis link.
+    symbol : str
+        A symbol which represents this applet. Lanis uses Font Awesome and Glyphicons for this.
     """
 
     name: str
     colour: str
-    group: str
+    folder: list[Folder]
     link: str
+    symbol: str
+
+
+@cache
+def _get_folders() -> list[Folder]:
+    """Get all web folders from Lanis.
+
+    Returns
+    -------
+    list[Folder]
+        A list of Folder.
+    """
+    folders: list[Folder] = []
+
+    response = Request.get(URL.index, params={"a": "ajax", "f": "apps"})
+
+    for entry in response.json()["folders"]:
+        folders.append(
+            Folder(
+                name=entry["name"],
+                symbol=re.sub(
+                    r"(fas.|fa.|flip-\w+|glyphicon.|-o|-alt|fw|\n|\r| )",
+                    "",
+                    entry["logo"],
+                ),
+                colour=None if entry["farbe"] == "000000" else entry["farbe"],
+            )
+        )
+
+    LOGGER.info("Get folders: Success.")
+
+    return folders
 
 
 @cache
@@ -43,15 +97,29 @@ def _get_apps() -> list[App]:
     """
     apps: list[App] = []
 
+    folders = _get_folders()
+
     response = Request.get(URL.index, params={"a": "ajax", "f": "apps"})
 
     for entry in response.json()["entrys"]:
+        # Get Folder dataclass from folder list.
+        folder: list[str] = []
+        for entry_folder in entry["Ordner"]:
+            folder.append(
+                next(folder for folder in folders if folder.name == entry_folder)
+            )
+
         apps.append(
             App(
                 name=entry["Name"],
                 colour=entry["Farbe"],
-                group=entry["Ordner"][0],
+                folder=folder,
                 link=urljoin(URL.base, entry["link"]),
+                symbol=re.sub(
+                    r"(fas.|fa.|flip-\w+|glyphicon.|-o|-alt|fw|\n|\r| )",
+                    "",
+                    entry["Logo"],
+                ),
             )
         )
 
@@ -84,7 +152,7 @@ def _get_available_apps() -> list[str]:
         for implemented in implemented_apps:
             if (
                 SequenceMatcher(None, app.name.lower(), implemented.lower()).ratio()
-                > 0.8 # Probably need to tweak this number
+                > 0.8  # Probably need to tweak this number
             ):
                 available_apps.append(implemented)
 
