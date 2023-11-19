@@ -117,6 +117,8 @@ Functions
 .. currentmodule:: lanisapi.LanisClient
 .. autofunction:: get_apps
 
+.. autofunction:: get_folders
+
 .. autofunction:: get_available_apps
 
 .. autofunction:: get_app_availability
@@ -125,4 +127,6 @@ Types
 ^^^^^
 
 .. currentmodule:: lanisapi.functions.apps
+.. autoclass:: Folder
+
 .. autoclass:: App

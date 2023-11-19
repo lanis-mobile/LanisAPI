@@ -5,7 +5,14 @@ from datetime import datetime
 import httpx
 
 from .constants import LOGGER, URL
-from .functions.apps import App, _get_app_availability, _get_apps, _get_available_apps
+from .functions.apps import (
+    App,
+    Folder,
+    _get_app_availability,
+    _get_apps,
+    _get_available_apps,
+    _get_folders,
+)
 from .functions.authentication_types import LanisAccount, LanisCookie
 from .functions.calendar import Calendar, _get_calendar, _get_calendar_month
 from .functions.conversations import Conversation, _get_conversations
@@ -66,7 +73,7 @@ class LanisClient:
 
         self.cryptor = Cryptor()
 
-        LOGGER.info("USING VERSION 0.3.1")
+        LOGGER.info("USING VERSION 0.3.2")
 
         LOGGER.warning("LANISAPI IS STILL IN A EARLY STAGE SO EXPECT BUGS.")
 
@@ -321,3 +328,15 @@ class LanisClient:
         bool
         """
         return _get_app_availability(app_name)
+
+    @requires_auth
+    @handle_exceptions
+    def get_folders(self) -> list[Folder]:
+        """Get all web folders from Lanis.
+
+        Returns
+        -------
+        list[Folder]
+            A list of Folder.
+        """
+        return _get_folders()

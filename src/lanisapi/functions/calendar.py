@@ -3,6 +3,8 @@
 import calendar
 from dataclasses import dataclass
 from datetime import datetime
+from functools import partial
+from typing import Callable
 
 from ..constants import LOGGER, URL
 from ..helpers.request import Request
@@ -21,7 +23,7 @@ class Calendar:
     events : list[Calendar] or list[dict[str, any]]
         Use `events` to access the most important properties.
         It is either in `Calendar` or `JSON` format.
-        When it is in JSON format it has all including unnecessary properties.
+        When it is in JSON format it has all, including unnecessary ones, properties.
     """
 
     @dataclass
@@ -43,6 +45,9 @@ class Calendar:
             Could also exceed the calendars start and end.
         whole_day : bool
             Does it happen the whole day or only between a specific time.
+        responsible : Callable
+            The person who is responsible for this event.
+            You need to call this first, then it returns (hopefully) a string.
         """
 
         title: str
@@ -51,10 +56,36 @@ class Calendar:
         start: datetime
         end: datetime
         whole_day: bool
+        responsible: Callable
 
     start: datetime
     end: datetime
     events: list[Event] | list[dict[str, any]] = None
+
+
+def _get_responsible(id: str) -> str:
+    """Get the responsible person of an event.
+
+    Parameters
+    ----------
+    id : str
+        The id of the calendar event, if None just return None.
+
+    Returns
+    -------
+    str
+    """
+    if not id:
+        return None
+
+    data = {
+        "f": "getEvent",
+        "id": id,
+    }
+
+    response = Request.post(URL.calendar, data=data)
+
+    return response.json()["properties"]["verantwortlich"]
 
 
 def _get_calendar_month(json: bool = False) -> Calendar:
@@ -140,6 +171,16 @@ def _get_calendar(start: datetime, end: datetime, json: bool = False) -> Calenda
     # Get JSON and map it to `Calendar` data class.
     calendar = Calendar(start, end, events=[])
     for data in calendar_raw_data.json():
+        # If data["Verantwortlich"] doesn't even exist, we can just return None when called.
+        try:
+            responsible = (
+                partial(_get_responsible, id=data["Id"])
+                if data["Verantwortlich"]
+                else partial(_get_responsible, id=None)
+            )
+        except KeyError:
+            responsible = partial(_get_responsible, id=None)
+
         calendar_data = Calendar.Event(
             title=data["title"],
             description=data["description"],
@@ -147,6 +188,7 @@ def _get_calendar(start: datetime, end: datetime, json: bool = False) -> Calenda
             start=datetime.strptime(data["Anfang"], "%Y-%m-%d %H:%M:%S"),
             end=datetime.strptime(data["Ende"], "%Y-%m-%d %H:%M:%S"),
             whole_day=data["allDay"],
+            responsible=responsible,
         )
         calendar.events.append(calendar_data)
 

@@ -1,7 +1,7 @@
 """A lib to interact with the Schulportal Hessen. Use LanisClient to interact."""
 
 from .client import LanisClient
-from .functions.apps import App
+from .functions.apps import App, Folder
 from .functions.authentication_types import LanisAccount, LanisCookie, School
 from .functions.calendar import Calendar
 from .functions.conversations import Conversation
@@ -15,6 +15,7 @@ __all__ = [
     "Calendar",
     "Conversation",
     "App",
+    "Folder",
     "LanisAccount",
     "LanisCookie",
     "School",
