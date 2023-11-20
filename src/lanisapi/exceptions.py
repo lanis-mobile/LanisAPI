@@ -19,3 +19,11 @@ class AppNotAvailableError(Exception):
 
 class CriticalElementWasNotFoundError(Exception):
     """Returned if a critical html element was not found."""
+
+
+class WrongCredentialsError(Exception):
+    """Returned if you passed a wrong password or username."""
+
+
+class NoSchoolFoundError(Exception):
+    """Returned if no school was found using the ``School`` params."""

@@ -10,8 +10,10 @@ from ..exceptions import (
     AppNotAvailableError,
     CriticalElementWasNotFoundError,
     LoginPageRedirectError,
+    NoSchoolFoundError,
     NotAuthenticatedError,
     PageNotFoundError,
+    WrongCredentialsError,
 )
 from ..functions.apps import _get_app_availability
 
@@ -34,6 +36,8 @@ def handle_exceptions(function: FunctionType) -> FunctionType:
             PageNotFoundError,
             CriticalElementWasNotFoundError,
             LoginPageRedirectError,
+            NoSchoolFoundError,
+            WrongCredentialsError,
         ) as err:
             raise err
 
