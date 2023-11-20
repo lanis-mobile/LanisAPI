@@ -1,10 +1,22 @@
 """This script includes the LanisClient to interact with Lanis."""
 
-from datetime import datetime
+import json
+import os
+from base64 import b64decode, b64encode
+from datetime import datetime, timedelta
+from pathlib import Path
+from time import time
 
 import httpx
+from Cryptodome.Cipher import AES
+from Cryptodome.Protocol.KDF import scrypt
+from Cryptodome.Random import get_random_bytes
 
 from .constants import LOGGER, URL
+from .exceptions import (
+    NoSchoolFoundError,
+    WrongCredentialsError,
+)
 from .functions.apps import (
     App,
     Folder,
@@ -69,11 +81,13 @@ class LanisClient:
 
         self.authenticated = False
 
+        self.authentication_method = None
+
         Request.set_headers(self.ad_header)
 
         self.cryptor = Cryptor()
 
-        LOGGER.info("USING VERSION 0.3.2")
+        LOGGER.info("USING VERSION 0.4.0 ALPHA")
 
         LOGGER.warning("LANISAPI IS STILL IN A EARLY STAGE SO EXPECT BUGS.")
 
@@ -89,17 +103,68 @@ class LanisClient:
         """If the script closes close the parser."""
         Request.close()
 
-    def close(self) -> None:
-        """Close the client; you need to do this."""
-        Request.close()
-        self.authenticated = False
-        LOGGER.info("Closed current session.")
-
     @property
     def authentication_cookies(self) -> LanisCookie:
         """Return ``LanisCookie`` with the authentication data (school id and session id) if authenticated. You can use this to authenticate with Lanis instantly."""
         cookies = Request.get_cookies()
         return LanisCookie(cookies.get("i", domain=""), cookies.get("sid"))
+
+    def close(self) -> None:
+        """Close the client and saves to session.json; you need to do this."""
+        Request.close()
+
+        self.authenticated = False
+
+        # If we already authenticated using the file just update it quickly
+        if self.authentication_method == "SessionsFile":
+            with open("session.json", "r+") as file:
+                session_file: dict[str, any] = json.loads(file.read())
+                session_file["timestamp"] = time()
+                session_file.update(session_file)
+
+                file.seek(0)
+                file.write(json.dumps(session_file))
+
+            LOGGER.info("Closed current session.")
+
+            return
+
+        # Encrypt the session data using AES-GCM and scrypt for the key
+        salt = get_random_bytes(12)
+        key = b64encode(scrypt(self.authentication.password, salt, 16, 2**14, 8, 1))
+        cipher = AES.new(key, AES.MODE_GCM, nonce=salt)
+
+        session_id = cipher.encrypt_and_digest(
+            self.authentication_cookies.session_id.encode()
+        )
+
+        # session_id: Append salt to beginning (16 chars) then mac (32 chars) and then the ciphertext.
+        session_data = {
+            "school_id": self.authentication_cookies.school_id,
+            "session_id": f"{b64encode(salt).decode()}{b64encode(session_id[1]).decode()}{b64encode(session_id[0]).decode()}",
+            "timestamp": time(),
+        }
+
+        # If file exist update it.
+        if Path("session.json").exists():
+            with open("session.json", "r+") as file:
+                raw_session_file = file.read()
+                # If empty
+                if not raw_session_file:
+                    file.write(json.dumps(session_data))
+                    LOGGER.info("Closed current session.")
+                    return
+
+                session_file: dict[str, any] = json.loads(raw_session_file)
+                session_file.update(session_data)
+
+                file.seek(0)
+                file.write(json.dumps(session_file))
+        else:
+            with open("session.json", "w") as file:
+                file.write(json.dumps(session_data))
+
+        LOGGER.info("Closed current session.")
 
     @handle_exceptions
     def get_schools(self) -> list[dict[str, str]]:
@@ -113,8 +178,13 @@ class LanisClient:
         return _get_schools(self.save)
 
     @handle_exceptions
-    def authenticate(self) -> None:
+    def authenticate(self, force: bool = False) -> None:
         """Log into the school portal and sets the session id in the auth_cookies.
+
+        Parameters
+        ----------
+        force : bool, optional
+            If True it always makes a new session with Lanis, by default False
 
         Note
         ----
@@ -127,23 +197,86 @@ class LanisClient:
 
         school_id: int
 
-        if isinstance(self.authentication, LanisCookie):
-            Request.set_cookies(
-                {
-                    "i": self.authentication.school_id,
-                    "sid": self.authentication.session_id,
-                }
-            )
-            LOGGER.info(
-                "Authenticate: Using cookies to authenticate, skip authentication."
-            )
-        else:
+        if not force:
+            if isinstance(self.authentication, LanisCookie):
+                Request.set_cookies(
+                    {
+                        "i": self.authentication.school_id,
+                        "sid": self.authentication.session_id,
+                    }
+                )
+                LOGGER.info(
+                    "Authenticate: Using cookies to authenticate, skip authentication."
+                )
+                self.authentication_method = "LanisCookie"
+            elif Path("session.json").exists():
+                with open("session.json", "r") as file:
+                    raw_session_file = file.read()
+
+                # If session file is empty return forced authenticate
+                if raw_session_file:
+                    try:
+                        session_file: dict[str, any] = json.loads(raw_session_file)
+                    except json.JSONDecodeError:
+                        LOGGER.warning("Authenticate: session.json file is corrupted.")
+                        os.remove("session.json")
+                        self.authenticate(True)
+                        return
+                else:
+                    LOGGER.info("Authenticate: session.json file is empty.")
+                    self.authenticate(True)
+                    return
+
+                # If session data is not older then 100 minutes.
+                if session_file and datetime.fromtimestamp(
+                    session_file["timestamp"]
+                ) > datetime.now() + timedelta(minutes=-100):
+                    # Preparing the decrypt of the session id.
+                    salt = b64decode(session_file["session_id"][:16])
+                    mac = b64decode(session_file["session_id"][16:40])
+                    key = b64encode(
+                        scrypt(
+                            self.authentication.password, salt, 16, 2**14, 8, 1
+                        )
+                    )
+                    cipher = AES.new(key, AES.MODE_GCM, nonce=salt)
+
+                    # Decrypt and verify if the mac is right.
+                    try:
+                        session_id = cipher.decrypt_and_verify(
+                            b64decode(session_file["session_id"][40:].encode()), mac
+                        ).decode()
+                    except ValueError:
+                        LOGGER.info("Authenticate: session.json file is corrupted.")
+                        self.authenticate(True)
+                        return
+
+                    Request.set_cookies(
+                        {
+                            "i": session_file["school_id"],
+                            "sid": session_id,
+                        }
+                    )
+                else:
+                    LOGGER.info("Authenticate: Session.json file is outdated.")
+                    os.remove("session.json")
+                    self.authenticate(True)
+                    return
+
+                LOGGER.info("Authenticate: Using found session.json file.")
+                self.authentication_method = "SessionsFile"
+
+        if force or not (
+            Path("session.json").exists()
+            or isinstance(self.authentication, LanisCookie)
+        ):
             # Check if a id or school and place is provided.
             if isinstance(self.authentication.school, str):
                 school_id = self.authentication.school
             else:
                 schools = self.get_schools()
 
+                # Try to get wanted school with a one liner generator.
                 try:
                     school_id = next(
                         school
@@ -151,11 +284,9 @@ class LanisClient:
                         if school["Name"] == self.authentication.school.name
                         and school["Ort"] == self.authentication.school.city
                     )["Id"]
-                except StopIteration:
-                    LOGGER.warning(
-                        "Authenticate: School doesn't exist, check for right spelling."
-                    )
-                    return
+                except StopIteration as err:
+                    msg = "School doesn't exist, check for right spelling."
+                    raise NoSchoolFoundError(msg) from err
 
             # Get new session (value: SPH-Session) by posting to login page.
             response_session = get_session(
@@ -165,10 +296,8 @@ class LanisClient:
 
             if not response_session["location"]:
                 # It also could be other problems, Lanis can be very finicky.
-                LOGGER.error(
-                    "Authenticate: Could not log in, possibly wrong credentials."
-                )
-                return
+                msg = "Could not log in, possibly wrong credentials."
+                raise WrongCredentialsError(msg)
 
             # Get authentication url to get sid.
             auth_url = get_authentication_url(response_cookies)
@@ -177,6 +306,8 @@ class LanisClient:
             Request.set_cookies(
                 get_authentication_sid(auth_url, response_cookies, schoolid=school_id)
             )
+
+            self.authentication_method = "LanisAccount"
 
         # Tell Lanis how to encrypt
         if not self.cryptor.authenticate():
