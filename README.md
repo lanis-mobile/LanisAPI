@@ -20,6 +20,11 @@ It's an unofficial Python library for the Schulportal Hessen. Also available on 
 
 **Overview of future Features, Problems and other things [here](https://github.com/users/kurwjan/projects/2).**
 
+## App for the Schulportal Hessen
+If you want to have an app for Lanis, check out [SPH-vertretungsplan](https://github.com/alessioC42/SPH-vertretungsplan) by [@alessioC42](https://github.com/alessioC42). _It's still in an early phase!_
+
+**It would be also really nice if you contribute to this project**, like bug reporting, if you know Dart and Flutter it would be nice to see your help or you could learn Dart, it's not hard.
+
 ## How do I install it?
 
 ```sh
@@ -65,8 +70,8 @@ The Android-App [sph-planner](https://github.com/koenidv/sph-planner) from [@koe
 
 Other projects that didn't helped me but are cool:
 
-+ **Good TypeScript library [Maria](https://github.com/elderguardian/maria) from [Elderguardian](https://github.com/elderguardian/)**
-+ Flutter Android app [SPH-Vertretungsplan](https://github.com/alessioC42/SPH-vertretungsplan) also from [@alessioC42](https://github.com/alessioC42)
++ **Flutter Android app [SPH-Vertretungsplan](https://github.com/alessioC42/SPH-vertretungsplan) also from [@alessioC42](https://github.com/alessioC42)**
++ TypeScript library [Maria](https://github.com/elderguardian/maria) from [Elderguardian](https://github.com/elderguardian/)
 + Javascript app [SchulportalApp](https://github.com/DerOwnerHD/SchulportalApp) from [DerOwnerHD](https://github.com/DerOwnerHD)
 + Flutter Android app [lkwslr-sphplaner](https://github.com/flutter-preview/lkwslr-sphplaner) from [flutter-preview](https://github.com/flutter-preview)
 
