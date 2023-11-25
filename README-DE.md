@@ -20,6 +20,12 @@ Eine inoffizielle Python-Bibliothek für das Schulportal Hessen. Auch auf [PyPi]
 
 **Übersicht von zukünftigen Features, Probleme und anderes [hier](https://github.com/users/kurwjan/projects/2)**
 
+## App für das Schulportal Hessen
+Wenn du eine App für Lanis haben möchtest, guck dir mal [SPH-vertretungsplan](https://github.com/alessioC42/SPH-vertretungsplan) by [@alessioC42](https://github.com/alessioC42) an. _Es ist noch in einer frühen Phase!_
+
+**Es wäre auch schön wenn du zu diesen Projekt etwas beitragst**, zum Beispiel: Fehler melden, wenn du Dart und Flutter kannst, wäre es schön deine Hilfe zu sehen oder du könntest Dart lernen, es ist nicht hart.
+
+
 ## Wie installiere ich das?
 
 ```sh
