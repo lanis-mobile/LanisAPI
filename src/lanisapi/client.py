@@ -88,7 +88,7 @@ class LanisClient:
 
         Request.set_headers(self.ad_header)
 
-        LOGGER.info("USING VERSION 0.4.0 ALPHA")
+        LOGGER.info("USING VERSION 0.4.0")
 
         LOGGER.warning("LANISAPI IS STILL IN A EARLY STAGE SO EXPECT BUGS.")
 
