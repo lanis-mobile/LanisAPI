@@ -61,8 +61,3 @@ Presenting data
 
 Don't return just ``dict`` or something rather use the ``dataclass`` from the built-in ``dataclasses``.
 Optionally in some cases the pure ``JSON`` can be returned.
-
-Saving files
-~~~~~~~~~~~~
-
-If you want to add something that saves a file **it should not save it when LanisClient.save** is ``False``.

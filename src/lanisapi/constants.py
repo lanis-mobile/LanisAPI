@@ -2,12 +2,14 @@
 
 import logging
 from dataclasses import dataclass
+from typing import TypeAlias
 from urllib.parse import urljoin
 
 LOGGER = logging.getLogger("LanisClient")
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s - %(name)s   %(message)s")
 
+JSON: TypeAlias = dict[str, any]
 
 @dataclass
 class URL:
@@ -21,3 +23,4 @@ class URL:
     substitution_plan = urljoin(base, "vertretungsplan.php")
     schools = urljoin("https://startcache.schulportal.hessen.de/", "exporteur.php")
     encryption = urljoin(base, "ajax.php")
+    login = "https://login.schulportal.hessen.de/"

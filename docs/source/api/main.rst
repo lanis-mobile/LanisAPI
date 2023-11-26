@@ -35,6 +35,8 @@ Authentication types
 
 .. autoclass:: LanisCookie
 
+.. autoenum:: SessionType
+
 Get all schools
 ~~~~~~~~~~~~~~~
 

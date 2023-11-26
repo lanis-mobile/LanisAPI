@@ -7,7 +7,7 @@ from ..constants import LOGGER, URL
 from ..helpers.request import Request
 
 
-def _get_schools(save: bool) -> list[dict[str, str]]:
+def _get_schools() -> list[dict[str, str]]:
     """Return all schools with their id, name and city.
 
     Returns
@@ -34,10 +34,6 @@ def _get_schools(save: bool) -> list[dict[str, str]]:
     for group in response:
         for school in group["Schulen"]:
             schools.append(school)
-
-    if save is True:
-        with open("schools.json", "w") as file:
-            json.dump(schools, file)
 
     LOGGER.info("Get schools: Successfully got schools.")
 
