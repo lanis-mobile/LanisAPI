@@ -6,8 +6,8 @@ project = "LanisAPI"
 copyright = "2023, kurwjan"
 author = "kurwjan"
 
-release = "0.4.0"
-version = "0.4.0"
+release = "0.4.1"
+version = "0.4.1"
 
 # -- General configuration
 

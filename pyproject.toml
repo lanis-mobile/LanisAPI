@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "lanisapi"
-version = "0.4.0"
+version = "0.4.1"
 authors = [
     { name = "kurwjan" }
 ]
@@ -28,6 +28,7 @@ dependencies = [
     "httpx",
     "selectolax",
     "pycryptodomex",
+    "py-machineid"
 ]
 
 [project.urls]
