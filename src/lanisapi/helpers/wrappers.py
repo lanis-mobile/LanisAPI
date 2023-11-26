@@ -9,6 +9,7 @@ from ..constants import LOGGER
 from ..exceptions import (
     AppNotAvailableError,
     CriticalElementWasNotFoundError,
+    ForceNewAuthenticationError,
     LoginPageRedirectError,
     NoSchoolFoundError,
     NotAuthenticatedError,
@@ -38,6 +39,7 @@ def handle_exceptions(function: FunctionType) -> FunctionType:
             LoginPageRedirectError,
             NoSchoolFoundError,
             WrongCredentialsError,
+            ForceNewAuthenticationError,
         ) as err:
             raise err
 

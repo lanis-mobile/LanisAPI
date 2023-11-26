@@ -27,3 +27,7 @@ class WrongCredentialsError(Exception):
 
 class NoSchoolFoundError(Exception):
     """Returned if no school was found using the ``School`` params."""
+
+
+class ForceNewAuthenticationError(Exception):
+    """Thrown if we need to make a completely new session. Usually it is not thrown outside of the lib."""

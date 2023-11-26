@@ -28,7 +28,7 @@ What is this?
 LanisAPi is an unofficial Python library for the Schulportal Hessen also available on `PyPi <https://pypi.org/project/lanisapi/>`__.
 
 Features
---------
+~~~~~~~~
 
 * Fetch homework or other tasks.
 * Fetch substitution plan.
@@ -38,6 +38,12 @@ Features
 * Fetch all web applets with their links.
 
 Overview of future features, problems and other things `here <https://github.com/users/kurwjan/projects/2>`__.
+
+App for the Schulportal
+-----------------------
+If you want to have an app for Lanis, check out `SPH-vertretungsplan <https://github.com/alessioC42/SPH-vertretungsplan>`__ by `@alessioC42 <https://github.com/alessioC42>`__. *It's still in an early phase!*
+
+**It would be also really nice if you contribute to this project**, like bug reporting, if you know Dart and Flutter it would be nice to see your help or you could learn Dart, it's not hard.
 
 Example
 -------

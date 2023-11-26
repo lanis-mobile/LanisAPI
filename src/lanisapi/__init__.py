@@ -2,7 +2,7 @@
 
 from .client import LanisClient
 from .functions.apps import App, Folder
-from .functions.authentication_types import LanisAccount, LanisCookie, School
+from .functions.authentication_types import LanisAccount, LanisCookie, School, SessionType
 from .functions.calendar import Calendar
 from .functions.conversations import Conversation
 from .functions.substitution import SubstitutionPlan
@@ -19,4 +19,5 @@ __all__ = [
     "LanisAccount",
     "LanisCookie",
     "School",
+    "SessionType"
 ]

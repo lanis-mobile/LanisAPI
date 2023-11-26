@@ -1,6 +1,7 @@
 """This script includes handy dataclasses for authenticating with Lanis."""
 
 from dataclasses import dataclass
+from enum import Enum
 
 
 @dataclass
@@ -56,3 +57,15 @@ class LanisCookie:
 
     school_id: str
     session_id: str
+
+
+class SessionType(Enum):
+    """Used in ``authenticate()`` to indicate which session type you want.
+
+    * NORMAL, used to get a normal session which lasts 100min.
+    * LONG, used to get a 30-days (``angemeldet bleiben`` option).
+
+    """
+
+    NORMAL = 1
+    LONG = 2

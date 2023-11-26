@@ -2,31 +2,13 @@
 import os
 from time import time
 
-from ..constants import LOGGER
-
 
 class HTMLLogger:
     """Provide various logging functions to send html code for bug reports."""
 
-    save: bool
-
     @classmethod
-    def setup(cls, save_to_file: bool) -> None:
-        """Create a initial html_logs.txt file and checks if saving is allowed.
-
-        Parameters
-        ----------
-        save_to_file : bool
-            _description_
-        """
-        cls.save = save_to_file
-
-        if not cls.save:
-            LOGGER.info(
-                "HTMLLogger: Saving to file was set to False, logs will be very messy!"
-            )
-            return
-
+    def init(cls) -> None:
+        """Create a initial html_logs.txt file and checks if saving is allowed."""
         if not os.path.exists("html_logs.txt"):
             with open("html_logs.txt", "w", encoding="utf-8") as file:
                 file.writelines(
@@ -73,10 +55,6 @@ class HTMLLogger:
 #--End--------------------------#
 
 """
-
-        if not cls.save:
-            LOGGER.info(f"HTMLLogger: {log}")
-            return
 
         with open("html_logs.txt", "a", encoding="utf-8") as file:
             file.write(log)
