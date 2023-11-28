@@ -5,6 +5,7 @@
         "Cryptodome",
         "cryptor",
         "Cryptor",
+        "dataclass",
         "empf",
         "entrys",
         "exporteur",

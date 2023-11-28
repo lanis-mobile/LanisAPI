@@ -1,16 +1,17 @@
 """This script includes classes and functions about the 'Kalender' page."""
 
 import calendar
-from dataclasses import dataclass
 from datetime import datetime
 from functools import partial
 from typing import Callable
+
+from attrs import define, field
 
 from ..constants import LOGGER, URL
 from ..helpers.request import Request
 
 
-@dataclass
+@define
 class Calendar:
     """The calendar page in a data type.
 
@@ -26,7 +27,7 @@ class Calendar:
         When it is in JSON format it has all, including unnecessary ones, properties.
     """
 
-    @dataclass
+    @define
     class Event:
         """Each calendar cell "event" data.
 
@@ -50,17 +51,17 @@ class Calendar:
             You need to call this first, then it returns (hopefully) a string.
         """
 
-        title: str
-        description: str
-        place: str
-        start: datetime
-        end: datetime
-        whole_day: bool
-        responsible: Callable
+        title: field(type=str)
+        description: field(type=str)
+        place: field(type=str)
+        start: field(type=datetime)
+        end: field(type=datetime)
+        whole_day: field(type=bool)
+        responsible: field(type=Callable)
 
-    start: datetime
-    end: datetime
-    events: list[Event] | list[dict[str, any]] = None
+    start: field(type=datetime)
+    end: field(type=datetime)
+    events: field(type=list[Event] | list[dict[str, any]])
 
 
 def _get_responsible(id: str) -> str:

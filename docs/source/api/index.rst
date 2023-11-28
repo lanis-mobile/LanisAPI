@@ -9,3 +9,4 @@ API References
 
     main
     exceptions
+    dict

@@ -1,9 +1,9 @@
 """This script includes classes and functions about the 'Mein Unterricht' page."""
 
-from dataclasses import dataclass
 from datetime import datetime
 from urllib.parse import urljoin
 
+from attrs import define, field
 from selectolax.parser import HTMLParser
 
 from ..constants import LOGGER, URL
@@ -12,7 +12,7 @@ from ..helpers.html_logger import HTMLLogger
 from ..helpers.request import Request
 
 
-@dataclass
+@define
 class Task:
     """The "Mein Unterricht" page in a data type. Expect many parameters to be `None`.
 
@@ -37,14 +37,14 @@ class Task:
         Download link to a zip file containing all attachments.
     """
 
-    title: str
-    date: datetime
-    subject_name: str
-    teacher: str
-    description: str
-    details: str
-    attachment: list[str]
-    attachment_url: str
+    title: field(type=str)
+    date: field(type=datetime)
+    subject_name: field(type=str)
+    teacher: field(type=str)
+    description: field(type=str)
+    details: field(type=str)
+    attachment: field(factory=list, type=list[str])
+    attachment_url: field(type=str)
 
 
 def _get_tasks() -> list[Task]:

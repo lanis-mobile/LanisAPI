@@ -1,16 +1,17 @@
 """This script includes functions and classes for getting Lanis applets and checking for the availability of this library supported applets."""
 
 import re
-from dataclasses import dataclass
 from difflib import SequenceMatcher
 from functools import cache
 from urllib.parse import urljoin
+
+from attrs import define, field
 
 from ..constants import LOGGER, URL
 from ..helpers.request import Request
 
 
-@dataclass
+@define
 class Folder:
     """A Lanis web folder.
 
@@ -24,12 +25,12 @@ class Folder:
         The colour of these small top bars which you can see on Lanis.
     """
 
-    name: str
-    symbol: str
-    colour: str
+    name: field(type=str)
+    symbol: field(type=str)
+    colour: field(type=str)
 
 
-@dataclass
+@define
 class App:
     """A Lanis web applet.
 
@@ -48,11 +49,11 @@ class App:
         A symbol which represents this applet. Lanis uses Font Awesome and Glyphicons for this.
     """
 
-    name: str
-    colour: str
-    folder: list[Folder]
-    link: str
-    symbol: str
+    name: field(type=str)
+    colour: field(type=str)
+    folder: field(factory=list, type=list[Folder])
+    link: field(type=str)
+    symbol: field(type=str)
 
 
 @cache
