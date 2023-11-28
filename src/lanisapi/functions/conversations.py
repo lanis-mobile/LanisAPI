@@ -1,9 +1,9 @@
 """This script includes classes and functions about the 'Nachrichten - Beta-Version' page."""
 
 import json
-from dataclasses import dataclass
 from datetime import datetime, timedelta
 
+from attrs import define, field
 from selectolax.parser import HTMLParser
 
 from ..constants import LOGGER, URL
@@ -11,7 +11,7 @@ from ..helpers.cryptor import Cryptor
 from ..helpers.request import Request
 
 
-@dataclass
+@define
 class Conversation:
     """A conversation.
 
@@ -40,15 +40,15 @@ class Conversation:
         Currently always None because it wasn't implemented yet.
     """
 
-    id: str
-    title: str
-    teacher: str
-    creation_date: datetime
-    newest_date: datetime
-    unread: bool
-    special_receivers: list[str]
-    receivers: list[str]
-    content: str
+    id: field(type=str)
+    title: field(type=str)
+    teacher: field(type=str)
+    creation_date: field(type=datetime)
+    newest_date: field(type=datetime)
+    unread: field(type=bool)
+    special_receivers: field(factory=list, type=list[str])
+    receivers: field(factory=list, type=list[str])
+    content: field(type=str)
     comments = None
 
 

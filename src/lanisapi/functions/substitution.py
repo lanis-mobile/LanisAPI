@@ -1,9 +1,9 @@
 """This script includes classes and functions about the 'Vertretungsplan' page."""
 
 import re
-from dataclasses import dataclass
 from datetime import datetime
 
+from attrs import define, field
 from selectolax.parser import HTMLParser
 
 from ..constants import LOGGER, URL
@@ -12,7 +12,7 @@ from ..helpers.html_logger import HTMLLogger
 from ..helpers.request import Request
 
 
-@dataclass
+@define
 class SubstitutionPlan:
     """The substitution plan page in a data type.
 
@@ -26,7 +26,7 @@ class SubstitutionPlan:
         ``info`` is the box with the title "Allgemein" that exists sometimes.
     """
 
-    @dataclass
+    @define
     class Substitution:
         """The individual substitution data (table row).
 
@@ -48,17 +48,17 @@ class SubstitutionPlan:
             More info about the substitution.
         """
 
-        substitute: str
-        teacher: str
-        hours: str
-        class_name: str
-        subject: str
-        room: str
-        notice: str
+        substitute: field(type=str)
+        teacher: field(type=str)
+        hours: field(type=str)
+        class_name: field(type=str)
+        subject: field(type=str)
+        room: field(type=str)
+        notice: field(type=str)
 
-    date: datetime
-    info: str
-    substitutions: list[Substitution]
+    date: field(type=datetime)
+    info: field(type=str)
+    substitutions: field(factory=list, type=list[Substitution])
 
 
 def _get_substitution_info() -> dict[str, str]:
@@ -83,7 +83,7 @@ def _get_substitution_info() -> dict[str, str]:
     except AttributeError:
         notice = None
 
-    date_element = html.css_first("div.panel-info div.panel-body h3")
+    date_element = html.css_first("div#content div.panel-body h3")
     try:
         date = re.findall(r"(\d\d\.\d\d\.\d\d\d\d)", date_element.text())[0]
     except AttributeError as err:

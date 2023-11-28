@@ -29,11 +29,11 @@ Authentication types
 ~~~~~~~~~~~~~~~~~~~~
 
 .. currentmodule:: lanisapi.functions.authentication_types
-.. autoclass:: School
+.. autoclass:: School()
 
-.. autoclass:: LanisAccount
+.. autoclass:: LanisAccount()
 
-.. autoclass:: LanisCookie
+.. autoclass:: LanisCookie()
 
 .. autoenum:: SessionType
 
@@ -59,8 +59,9 @@ Types
 ^^^^^
 
 .. currentmodule:: lanisapi.functions.substitution
-.. autoclass:: SubstitutionPlan
-    :members:
+.. autoclass:: SubstitutionPlan()
+
+    .. autoclass:: lanisapi.functions.substitution.SubstitutionPlan.Substitution()
 
 Getting the Calendar
 ~~~~~~~~~~~~~~~~~~~~
@@ -77,8 +78,9 @@ Types
 ^^^^^
 
 .. currentmodule:: lanisapi.functions.calendar
-.. autoclass:: Calendar
-    :members:
+.. autoclass:: Calendar()
+
+    .. autoclass:: lanisapi.functions.calendar.Calendar.Event()
 
 Getting all tasks
 ~~~~~~~~~~~~~~~~~
@@ -93,7 +95,7 @@ Types
 ^^^^^
 
 .. currentmodule:: lanisapi.functions.tasks
-.. autoclass:: Task
+.. autoclass:: Task()
 
 Getting conversations
 ~~~~~~~~~~~~~~~~~~~~~
@@ -108,7 +110,7 @@ Types
 ^^^^^
 
 .. currentmodule:: lanisapi.functions.conversations
-.. autoclass:: Conversation
+.. autoclass:: Conversation()
 
 Getting all web applets
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -129,6 +131,6 @@ Types
 ^^^^^
 
 .. currentmodule:: lanisapi.functions.apps
-.. autoclass:: Folder
+.. autoclass:: Folder()
 
-.. autoclass:: App
+.. autoclass:: App()

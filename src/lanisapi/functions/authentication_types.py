@@ -1,10 +1,11 @@
 """This script includes handy dataclasses for authenticating with Lanis."""
 
-from dataclasses import dataclass
 from enum import Enum
 
+from attrs import define, field
 
-@dataclass
+
+@define
 class School:
     """Alternative to school id for authentication.
 
@@ -16,13 +17,13 @@ class School:
         City name sometimes with abbreviations or fully written.
     """
 
-    name: str
-    city: str
+    name: field(type=str)
+    city: field(type=str)
 
 
-@dataclass
+@define
 class LanisAccount:
-    """A dataclass to authenticate with this library. It's a normal Lanis user account.
+    """An attrs class to authenticate with this library. It's a normal Lanis user account.
 
     Parameters
     ----------
@@ -34,14 +35,14 @@ class LanisAccount:
         The password.
     """
 
-    school: str | School
-    username: str
-    password: str
+    school: field(type=str | School)
+    username: field(type=str)
+    password: field(type=str)
 
 
-@dataclass
+@define
 class LanisCookie:
-    """A dataclass to authenticate with this library. It's a cookie with the school id and session id.
+    """An attrs class to authenticate with this library. It's a cookie with the school id and session id.
 
     Parameters
     ----------
@@ -55,8 +56,8 @@ class LanisCookie:
     Use ``LanisClient.authentication_cookies`` from a previous session to get ``LanisCookie`` for the next session.
     """
 
-    school_id: str
-    session_id: str
+    school_id: field(type=str)
+    session_id: field(type=str)
 
 
 class SessionType(Enum):
