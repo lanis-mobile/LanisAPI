@@ -3,7 +3,7 @@
 # LanisAPI
 
 > ## ⚠ Hinweis
-> **Da das Schulportal Hessen sich schnell ändert und fragmentiert ist, können einige Funktionen bei bestimmten Schulen oder nach einer Zeit nicht mehr funktionieren.**
+> **Da das Schulportal Hessen fragmentiert ist, können einige Funktionen bei bestimmten Schulen nicht funktionieren.**
 
 > *Das Projekt ist aktuell nicht am sterben, aber mein aktueller Fokus ist auf der App von [@alessioC42](https://github.com/alessioC42). Ich werde noch alle milestones, die ich [hier](https://github.com/kurwjan/LanisAPI/milestones) erstellt habe, fertig machen und dann das Projekt beenden.*
 
