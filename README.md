@@ -3,7 +3,9 @@
 # LanisAPI
 
 > ## ⚠ Notice
-> **Because the Schulportal Hessen changes quickly and is very fragmented, some functions at specific schools or after a while may no longer work.**
+> **Because the Schulportal Hessen is very fragmented, some functions at specific schools may not work.**
+
+> *No the Project isn't abandonend but my focus is on the App by [@alessioC42](https://github.com/alessioC42). I will finish all milestones that I created [here](https://github.com/kurwjan/LanisAPI/milestones) and then I will no longer work on this project.*
 
 ## What is this?
 
