@@ -2,10 +2,10 @@
 
 # LanisAPI
 
-> ## ⚠ Hinweis
-> **Da das Schulportal Hessen fragmentiert ist, können einige Funktionen bei bestimmten Schulen nicht funktionieren.**
-
-> *Das Projekt ist aktuell nicht am sterben, aber mein aktueller Fokus ist auf der App von [@alessioC42](https://github.com/alessioC42). Ich werde noch alle milestones, die ich [hier](https://github.com/kurwjan/LanisAPI/milestones) erstellt habe, fertig machen und dann das Projekt beenden.*
+> ## ⚠ Aktueller Rework
+> **[Siehe #32](https://github.com/kurwjan/LanisAPI/issues/32)**
+> 
+> *Jetzt kannst du einfach v0.4.1 benutzen.*
 
 ## Was ist das?
 
@@ -23,10 +23,11 @@ Eine inoffizielle Python-Bibliothek für das Schulportal Hessen. Auch auf [PyPi]
 **Übersicht von zukünftigen Features, Probleme und anderes [hier](https://github.com/users/kurwjan/projects/2)**
 
 ## App für das Schulportal Hessen
-Wenn du eine App für Lanis haben möchtest, guck dir mal [SPH-vertretungsplan](https://github.com/alessioC42/SPH-vertretungsplan) by [@alessioC42](https://github.com/alessioC42) an. _Es ist noch in einer frühen Phase!_
+Du möchtest eine App? Benutze [lanis-mobile](https://github.com/alessioC42/lanis-mobile)!
 
-**Es wäre auch schön wenn du zu diesen Projekt etwas beitragst**, zum Beispiel: Fehler melden, wenn du Dart und Flutter kannst, wäre es schön deine Hilfe zu sehen oder du könntest Dart lernen, es ist nicht hart.
+[<img src="https://github.com/alessioC42/lanis-mobile/assets/84250128/19d30436-32f7-4cbe-b78e-f2fee3583c28" width="25%">](https://github.com/alessioC42/lanis-mobile)
 
+Lanis-mobile ist offen für neue Contributors!
 
 ## Wie installiere ich das?
 
