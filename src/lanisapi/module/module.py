@@ -1,4 +1,7 @@
 from abc import ABC, abstractmethod
+
+import httpx
+
 from ..core.helper.exceptions import NotSupportedException
 
 
@@ -11,16 +14,16 @@ class NotSupportedModule:
 
 
 class Module(ABC):
-    def __init__(self, request):
+    def __init__(self, request: httpx.Client):
         self.request = request
 
-
-class StandardModule(Module):
     @property
     @abstractmethod
     def name(self):
         raise NotImplementedError
 
+
+class StandardModule(Module):
     @property
     @abstractmethod
     def link(self):

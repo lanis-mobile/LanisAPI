@@ -1,31 +1,15 @@
 import datetime
-from dataclasses import dataclass
 from urllib.parse import urljoin
 import re
 
 from ..module import StandardModule
+from ..standard.substitution import SubstitutionPlan
 from ...core.helper.url import URL
 
 
-@dataclass
-class SubstitutionPlan:
-    @dataclass
-    class Substitution:
-        type: str
-        substitute: str
-        teacher: str
-        hours: str
-        classes: str
-        subject: str
-        room: str
-        notice: str
+# TODO: ADD SUPPORT FOR HTML PARSING
 
-    date: datetime.date
-    #info: str
-    substitutions: list[Substitution]
-
-
-class SubstitutionModule(StandardModule):
+class SubstitutionHTMLModule(StandardModule):
     name = 'substitution'
     link = urljoin(URL.index, 'vertretungsplan.php')
 
