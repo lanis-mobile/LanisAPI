@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from urllib.parse import urljoin
 import re
 
-from ..module import StandardModule
+from ..module import Module
 from ...core.helper.url import URL
 
 
@@ -25,17 +25,17 @@ class SubstitutionPlan:
     substitutions: list[Substitution]
 
 
-class SubstitutionModule(StandardModule):
-    name = 'substitution'
-    link = urljoin(URL.index, 'vertretungsplan.php')
+class SubstitutionModule(Module):
+    _name = 'substitution'
+    _link = urljoin(URL.index, 'vertretungsplan.php')
 
-    def _get_dates(self):
-        response = self.request.get(self.link)
+    def _get_dates(self) -> set[str]:
+        response = self._request.get(self._link)
         return set([date.group(1) for date in re.finditer(r'data-tag="(\d{2}\.\d{2}\.\d{4})"', response.text)])
 
-    def _fetch_plan(self, date: str):
+    def _fetch_plan(self, date: str) -> SubstitutionPlan:
         data = {"ganzerPlan": "true", "tag": date}
-        response = self.request.post(self.link, data=data)
+        response = self._request.post(self._link, data=data)
 
         return SubstitutionPlan(
             date=datetime.datetime.strptime(date, "%d.%m.%Y").date(),
@@ -51,7 +51,7 @@ class SubstitutionModule(StandardModule):
             ) for substitution in response.json()]
         )
 
-    def get(self):
+    def get(self) -> list[SubstitutionPlan]:
         dates = self._get_dates()
 
         plans = []

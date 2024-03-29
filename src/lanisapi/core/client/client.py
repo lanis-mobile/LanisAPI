@@ -1,46 +1,61 @@
 import dataclasses
+from typing import Type, Any
+from httpx import Cookies
 
 from ..initialization.types import CookieInitialization
-from ..helper.apps import get_apps, _is_supported
+from ..helper.apps import get_apps, is_link_supported
+from ...module.module import NotSupportedModule, Module, EmptyCustomModules
+from ...module.typed import TypingModules, TypingShortcuts, TypingExperimentalModules
 from ...module.standard import standard_modules
 from ...module.experimental import experimental_modules
-from ...module.module import NotSupportedModule, StandardModule
 
 
-class LanisClient:
-    def __init__(self, initialization: CookieInitialization, experimental = False):
+class LanisClient(TypingShortcuts):
+    def __init__(self, initialization: CookieInitialization, custom_modules: list[Type[Module]] = None) -> None:
         self.request = initialization.request
 
         self.apps = get_apps(self.request)
 
         supported_modules = self.__get_modules(standard_modules)
-        supported_modules["experimental"] = None
 
-        if experimental:
-            supported_experimental_modules = self.__get_modules(experimental_modules)
-            experimental_modules_class = dataclasses.make_dataclass('ExperimentalModules', supported_experimental_modules.keys())
-            supported_modules["experimental"] = experimental_modules_class(**supported_experimental_modules)
+        supported_experimental = self.__get_modules(experimental_modules)
+        typed_supported_experimental = TypingExperimentalModules(**supported_experimental)
 
-        modules_class = dataclasses.make_dataclass('Modules', supported_modules.keys())
+        setattr(self, "experimental", typed_supported_experimental)
+        supported_modules["experimental"] = typed_supported_experimental
 
-        self.modules = modules_class(**supported_modules)
+        if custom_modules is not None:
+            supported_customs = self.__get_modules(custom_modules)
+            customs_dataclass = dataclasses.make_dataclass('CustomModules', supported_customs.keys())
+            customs_instance = customs_dataclass(**supported_customs)
 
-    def __get_modules(self, module_list: list[StandardModule]):
+            setattr(self, "custom", customs_instance)
+            supported_modules["custom"] = customs_instance
+        else:
+            customs_instance = EmptyCustomModules()
+            setattr(self, "custom", customs_instance)
+            supported_modules["custom"] = customs_instance
+
+        self.modules = TypingModules(**supported_modules)
+
+    # should be OK because it should be protected from the lib user.
+    # noinspection PyProtectedMember, PyCallingNonCallable, PyTypeChecker
+    def __get_modules(self, module_list: list[Type[Module]]) -> dict[str, Any]:
         supported_modules = {}
         for module in module_list:
-            if _is_supported(module.link, self.apps):
-                supported_modules[module.name] = module(request=self.request)
-                setattr(self, module.name, supported_modules[module.name])
+            if module._link is None or is_link_supported(module._link, self.apps):
+                supported_modules[module._name] = module(request=self.request)
+                setattr(self, module._name, supported_modules[module._name])
             else:
-                supported_modules[module.name] = NotSupportedModule()
-                setattr(self, module.name, NotSupportedModule())
+                supported_modules[module._name] = NotSupportedModule()
+                setattr(self, module._name, NotSupportedModule())
 
         return supported_modules
 
     @property
-    def cookies(self):
+    def cookies(self) -> Cookies:
         return self.request.cookies
 
-    @staticmethod
-    def is_supported(app_link: str):
-        return _is_supported(app_link, standard_modules)
+    def is_supported(self, module: Module) -> bool:
+        # noinspection PyProtectedMember
+        return is_link_supported(module._link, self.apps)

@@ -2,24 +2,24 @@ import datetime
 from urllib.parse import urljoin
 import re
 
-from ..module import StandardModule
+from ..module import Module
 from ..standard.substitution import SubstitutionPlan
 from ...core.helper.url import URL
 
 
 # TODO: ADD SUPPORT FOR HTML PARSING
 
-class SubstitutionHTMLModule(StandardModule):
-    name = 'substitution'
-    link = urljoin(URL.index, 'vertretungsplan.php')
+class SubstitutionHTMLModule(Module):
+    _name = 'substitution_html'
+    _link = urljoin(URL.index, 'vertretungsplan.php')
 
     def _get_dates(self):
-        response = self.request.get(self.link)
+        response = self._request.get(self._link)
         return set([date.group(1) for date in re.finditer(r'data-tag="(\d{2}\.\d{2}\.\d{4})"', response.text)])
 
     def _fetch_plan(self, date: str):
         data = {"ganzerPlan": "true", "tag": date}
-        response = self.request.post(self.link, data=data)
+        response = self._request.post(self._link, data=data)
 
         return SubstitutionPlan(
             date=datetime.datetime.strptime(date, "%d.%m.%Y").date(),

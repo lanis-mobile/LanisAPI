@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from functools import cache
 from urllib.parse import urljoin
 
 import httpx
@@ -11,7 +12,8 @@ class App:
     link: str
 
 
-def get_apps(request: httpx.Client):
+@cache
+def get_apps(request: httpx.Client) -> list[App]:
     response = request.get(URL.index, params={
         "a": "ajax",
         "f": "apps"
@@ -27,7 +29,7 @@ def get_apps(request: httpx.Client):
     return apps
 
 
-def _is_supported(link, apps: list[App]):
+def is_link_supported(link, apps: list[App]) -> bool:
     for app in apps:
         if app.link == link:
             return True
