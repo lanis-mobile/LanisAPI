@@ -1,4 +1,2 @@
-from .substitution_html import SubstitutionHTMLModule
-
-experimental_modules = [SubstitutionHTMLModule]
-__all__ = ["SubstitutionHTMLModule", "experimental_modules"]
+experimental_modules = []
+__all__ = ["experimental_modules"]

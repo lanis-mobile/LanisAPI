@@ -10,7 +10,7 @@ from .module import NotSupportedModule
 
 @dataclass
 class TypingExperimentalModules:
-    substitution_html: SubstitutionHTMLModule | NotSupportedModule
+    pass
 
 
 @dataclass
