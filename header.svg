@@ -1,11 +1,11 @@
-<svg width="250" height="100" xmlns="http://www.w3.org/2000/svg">
+<svg width="220" height="90" xmlns="http://www.w3.org/2000/svg">
 <foreignObject width="250" height="100">
     <div xmlns="http://www.w3.org/1999/xhtml">
         <div align="center">
             <h1 style="font-family: 'Trebuchet MS', sans-serif; margin-bottom: 0">
                 <span style="color: #448b7c">Lanis</span><span style="color: #00bcd4;">API</span>
             </h1>
-            <h5 style="margin-top: 0; color: lightgray; font-family: 'Verdana', sans-serif; font-variant: small-caps;">rewrite branch</h5>
+            <h5 style="margin-top: 0; margin-bottom: 0; color: lightgray; font-family: 'Verdana', sans-serif; font-variant: small-caps;">rewrite branch</h5>
         </div>
     </div>
 </foreignObject>
