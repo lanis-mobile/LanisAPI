@@ -1,9 +1,4 @@
-<hr style="margin-top: 3em">
-<div align="center" style="margin-bottom: 3em">
-    <h1 style="margin-top: 1em; margin-bottom: 0; padding-top: 0">LanisAPI</h1>
-    <h4 style="margin-top: 0">rewrite branch</h4>
-</div>
-<hr> <!-- Absolutely disgusting code -->
+![](./header.svg)
 
 ### Work in progress
 Diese Branch enthält noch nicht alle alten Features und kein Wiki, aber sie
