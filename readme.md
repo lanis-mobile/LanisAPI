@@ -1,4 +1,6 @@
-![](./header.svg)
+<div align="center">
+  <img width="750" src="https://raw.githubusercontent.com/kurwjan/LanisAPI/rewrite/header.svg">
+</div>
 
 ### Work in progress
 Diese Branch enthält noch nicht alle alten Features und kein Wiki, aber sie
