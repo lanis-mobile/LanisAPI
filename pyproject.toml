@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lanisapi"
+version = "0.5.0a1"
+authors = [
+    { name = "kurwjan" }
+]
+description = "An unofficial Python-Library for Lanis."
+keywords = [
+    "Lanis",
+    "SPH",
+    "Schulportal Hessen",
+    "Hessen",
+    "API"
+]
+requires-python = ">=3.11"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Natural Language :: German"
+]
+dependencies = [
+    "httpx",
+    "selectolax",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/kurwjan/LanisAPI"
+"Bug Tracker" = "https://github.com/kurwjan/LanisAPI/issues"
+"Documentation" = "https://lanisapi.readthedocs.io/"
