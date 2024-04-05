@@ -2,7 +2,7 @@
   <img width="750" src="https://raw.githubusercontent.com/kurwjan/LanisAPI/rewrite/header.svg">
 </div>
 
-### Work in progress
+## Work in progress
 Diese Branch enthält noch nicht alle alten Features und kein Wiki, aber sie
 werden bald kommen. Aktuell implementiert ist:
 + Grundstruktur `LanisClient`
@@ -12,3 +12,15 @@ werden bald kommen. Aktuell implementiert ist:
     + Account-Initialisierung mit Schul-Id
 + Modularer Modulaufbau _(auch Custom Module)_
   + Vertretungsplan-Modul
+
+## Installation
+
+### Erste Methode (Git)
++ Habe Python 3.11
++ Downloade den Source-Code (z. B. `git clone https://github.com/kurwjan/LanisAPI.git`)
++ Führe `pip install .` im Root-Ordner _("LanisAPI")_ aus.
+
+### Zweite Methode (Pip)
++ Habe Python 3.11
++ Führe `pip install lanisapi==VERSION` aus um die spezifische Prerelease-Version downloaden zu können.
+  + Liste aller Prerelease- und Release-Versionen findest du hier: [Github](https://github.com/kurwjan/LanisAPI/releases) und [PyPi](https://pypi.org/project/lanisapi/#history).
