@@ -14,6 +14,7 @@ werden bald kommen. Aktuell implementiert ist:
   + Vertretungsplan-Modul
 
 ## Installation
+Jede Version ab **0.5.0** sind von der rewrite branch, bei PyPi sind sie aktuell als _development release_ markiert.
 
 ### Erste Methode (Git)
 + Habe Python 3.11
