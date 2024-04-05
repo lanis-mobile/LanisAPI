@@ -3,7 +3,7 @@
 # LanisAPI
 
 > ## ⚠ Rework in Progress
-> **[See issue #32](https://github.com/kurwjan/LanisAPI/issues/32)**
+> **[See issue #32](https://github.com/kurwjan/LanisAPI/issues/32)** and the **[rewrite branch](https://github.com/kurwjan/LanisAPI/tree/rewrite)**
 > 
 > *For now, you can use v0.4.1*
 
