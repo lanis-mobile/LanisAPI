@@ -8,6 +8,7 @@ version = "0.5.0-dev1"
 authors = [
     { name = "kurwjan" }
 ]
+readme = "readme.md"
 description = "An unofficial Python-Library for Lanis."
 keywords = [
     "Lanis",
