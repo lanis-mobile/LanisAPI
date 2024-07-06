@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "lanisapi"
-version = "0.5.0.post1.dev1"
+version = "1!0.0.1"
 authors = [
     { name = "kurwjan" }
 ]
@@ -17,7 +17,7 @@ keywords = [
     "Hessen",
     "API"
 ]
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
