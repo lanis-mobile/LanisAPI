@@ -3,4 +3,4 @@
 </div>
 
 ## Work in progress
-Ziel ist eine modulare LanisAPI.
+Goal is a modular Lanis library.

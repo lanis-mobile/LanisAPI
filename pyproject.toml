@@ -9,7 +9,7 @@ authors = [
     { name = "kurwjan" }
 ]
 readme = "readme.md"
-description = "Eine unoffizielle Python-Library für Lanis."
+description = "An unofficial python library for Lanis."
 keywords = [
     "Lanis",
     "SPH",
@@ -30,6 +30,6 @@ dependencies = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/kurwjan/LanisAPI"
-"Bug Tracker" = "https://github.com/kurwjan/LanisAPI/issues"
+"Homepage" = "https://github.com/lanis-mobile/LanisAPI"
+"Bug Tracker" = "https://github.com/lanis-mobile/LanisAPI/issues"
 "Documentation" = "https://lanisapi.readthedocs.io/"
