@@ -2,7 +2,7 @@ import httpx
 import re
 from datetime import datetime
 
-from ..core.constants import URL
+from .._core.constants import URL
 
 
 def get_substitution_dates(request: httpx.Client) -> list[datetime.date]:

@@ -1,5 +1,5 @@
 """
-The core elements of this library. It offers general stuff like authentication and other non-applet dependent stuff.
+The _core elements of this library. It offers general stuff like authentication and other non-applet dependent stuff.
 """
 
 from .schools import get_schools, get_school_id, School, District, parse_schools
