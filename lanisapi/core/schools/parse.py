@@ -3,6 +3,8 @@ from dataclasses import dataclass
 
 @dataclass
 class School:
+    """A school with Lanis support."""
+
     id: int
     name: str
     city: str

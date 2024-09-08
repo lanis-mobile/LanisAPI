@@ -38,6 +38,15 @@ def get_schools(request=httpx.Client()) -> list[dict] | None:
 
 
 def get_school_id(name: str, district_name: str, request=httpx.Client()) -> int | None:
+    """
+    Gets a school id via the provided name and district name.
+
+    :param name: The name of the school.
+    :param district_name: The name of the district.
+    :param request: A :class:`httpx.Client` instance.
+    :return: A school id or None when not successful.
+    """
+
     schools = parse_schools(get_schools(request))
     for district in schools:
         if district.name == district_name:

@@ -1,3 +1,5 @@
+"""Collection of various functions to authenticate with Lanis."""
+
 import httpx
 
 from ..constants import URL
@@ -37,7 +39,7 @@ def get_login_url(request: httpx.Client) -> str:
     The second step of the Lanis authentication process and returns the login value.#
     It needs the `SPH-Session` Cookie set by :func:`check_credentials`.
 
-    :param request: A :class:`httpx.Client` instance.
+    :param request: A :class:`httpx.Client` instance with the mentioned Cookies.
     :return: A login url.
     """
 

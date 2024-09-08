@@ -6,12 +6,21 @@ from ..constants import URL
 
 @dataclass
 class Applet:
+    """An applet/module of Lanis."""
+
     name: str
     link: str
     color: str
 
 
 def parse_applets(json: list[dict]) -> list[Applet]:
+    """
+    Parses a JSON of applets and returns a handy dataclass.
+
+    :param json: A JSON of applets.
+    :return: A list of :class:`Applet` objects.
+    """
+
     applets: list[Applet] = []
 
     for applet in json:
