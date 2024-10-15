@@ -5,9 +5,10 @@
 -----
 
 ### Work in Progress
-Currently, the project is being rewritten. If you want to look at an older _but deprecated_ version, try [this](https://github.com/lanis-mobile/LanisAPI/tree/deprecated-0.4.1) branch.
+Das Projekt wird gerade neugeschrieben.
+Wenn du eine ältere aber deprecated Version möchtest, versuche [diese](https://github.com/lanis-mobile/LanisAPI/tree/deprecated-0.4.1) Branch.
 
-#### Goal
-This rewrite tries to split the project into two parts, a modular module with every function and a modular module which contains a handy client that connects everything but might not support everything.
+#### Ziel
+Der Rewrite versucht das Package in zwei zu teilen, einmal ein modulares Modul mit jeder Funktion und ein semi-modulares Modul welches einen nützlichen Client enthält, jedoch wahrscheinlich nicht alles unterstützt.
 
-#### _No release is available yet._
+#### _Kein Release ist gerade verfügbar._

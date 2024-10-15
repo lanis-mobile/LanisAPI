@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lanisapi"
+version = "1!1.0.0.dev1"
+authors = [
+    { name="kurwjan", email="kurwjann@gmail.com" }
+]
+readme = "README.md"
+description = "A package for interacting with Lanis."
+keywords = [
+    "Lanis",
+    "SPH",
+    "Schulportal Hessen",
+    "Hessen",
+    "API"
+]
+requires-python = ">=3.13"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Natural Language :: German"
+]
+dependencies = [
+    "httpx",
+    "selectolax",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/lanis-mobile/LanisAPI"
+"Bug Tracker" = "https://github.com/lanis-mobile/LanisAPI/issues"
