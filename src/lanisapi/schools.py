@@ -27,7 +27,7 @@ def parse_schools(json: list[dict]) -> list[District]:
     Produces a list of dataclasses so you can use the school list easily.
 
     :param list[dict] json: The JSON from :func:`get_schools`.
-    :return: The JSON parsed into a dataclass.
+    :return: The JSON parsed into a :class:`District` list.
     :rtype: list[District]
     """
 
@@ -61,7 +61,7 @@ def get_schools(request=httpx.Client()) -> list[dict] | None:
             }
         ]
 
-    The gotten value is cached until the python interpreter stops.
+    The gotten value is cached throughout the runtime.
 
     :param httpx.Client request: Optional, authentication isn't required.
     :return: The school list JSON or when an error occurred None.
