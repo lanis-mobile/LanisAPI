@@ -16,4 +16,5 @@ class URL:
     schools = "https://startcache.schulportal.hessen.de/exporteur.php"
 
     start = urljoin(base, "startseite.php")
+    index = urljoin(base, "index.php")
     substitutions = urljoin(base, "vertretungsplan.php")

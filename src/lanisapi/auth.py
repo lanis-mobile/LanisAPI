@@ -102,3 +102,7 @@ def authenticate(account: Account, request=httpx.Client()) -> str:
     check_credentials(request, account)
     login_url = get_login_url(request)
     return get_session_token(request, login_url)
+
+
+def logout(request: httpx.Client) -> None:
+    request.post(URL.index, data={"logout": "all"})
