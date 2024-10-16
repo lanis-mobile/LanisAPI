@@ -2,13 +2,14 @@
 
 from .__version__ import __description__, __title__, __version__
 from ._constants import URL
-from .auth import authenticate, Account
+from .auth import authenticate, logout, Account
 from .schools import *
 from .applets import *
 from .substitutions import *
 
 __all__ = [
     "authenticate",
+    "logout",
     "Account",
     "District",
     "School",
