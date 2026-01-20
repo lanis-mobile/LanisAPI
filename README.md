@@ -1,11 +1,15 @@
 [[README DE](https://github.com/kurwjan/LanisAPI/blob/master/README-DE.md)]  [[README EN](https://github.com/kurwjan/LanisAPI/blob/master/README.md)]
 
-# LanisAPI
+<div align="center">
+    <img width="750" src="./logo.svg">
+</div>
 
-> ## ⚠ Rework in Progress
-> **[See issue #32](https://github.com/kurwjan/LanisAPI/issues/32)** and the **[rewrite branch](https://github.com/kurwjan/LanisAPI/tree/rewrite)**
+-----
+
+> [!WARNING]  
+> The project was deprecated. Development is now happening [here](https://github.com/lanis-mobile/liblanis-for-python).
 > 
-> *For now, you can use v0.4.1*
+> For now, you can use v0.4.1
 
 ## What is this?
 
